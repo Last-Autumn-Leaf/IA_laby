@@ -7,6 +7,7 @@ from IA_controller.Helper_fun import draw_rect_alpha
 class App_2 (App):
     def __init__(self,mazefile):
         super().__init__(mazefile)
+        self.visited_cases=[]
 
     def on_render(self):
         self.maze_render()
