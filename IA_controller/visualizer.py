@@ -15,7 +15,6 @@ class App_2 (App):
         self._display_surf.blit(self._image_surf, (self.player.x, self.player.y))
         pygame.display.flip()
 
-
     def color_visited(self,color=(0,255,0,70)):
         display_surf=self._display_surf
         tile_size_x = self.maze.tile_size_x

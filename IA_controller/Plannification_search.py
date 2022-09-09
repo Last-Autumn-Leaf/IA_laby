@@ -29,7 +29,6 @@ def bfs(depart,goal,neighborMap):
 if __name__ == '__main__':
     setCorrectCHWD()
     map_file_name='assets/test_Map'
-
     theAPP = App_2(map_file_name)
     maze=theAPP.maze.maze
     prolog_com=PrologCom(maze)

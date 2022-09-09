@@ -1,7 +1,7 @@
 from swiplserver import PrologMQI
 
 from  Constants import  *
-from IA_controller.Helper_fun import setCorrectCHWD
+from IA_controller.Helper_fun import setCorrectCHWD, getMazeFromFile
 
 prolog_dict={
 COIN :'coin',
@@ -72,7 +72,15 @@ class PrologCom:
     def getNeighborsMap(self):
         return self.neighbors_map
 
-
+    def getGoal(self):
+        ...
 
 if __name__ == '__main__':
     setCorrectCHWD()
+
+    map_file_name='assets/test_Map'
+    maze=getMazeFromFile(map_file_name)
+    prolog_com=PrologCom(maze)
+
+    print('A')
+    exit()
