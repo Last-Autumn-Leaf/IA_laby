@@ -1,5 +1,5 @@
 from Games2D import *
-from PrologCom import PrologCom
+from IA_controller.PrologCom import PrologCom
 
 if __name__ == '__main__':
 
