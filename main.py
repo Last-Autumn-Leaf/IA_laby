@@ -10,5 +10,6 @@ if __name__ == '__main__':
     # Niveau 2 - avec obstacles et ennemis - 'assets/mazeMedium_2'
 
     theAPP = App('assets/mazeMedium_3')
+    print(theAPP.maze.monsterList)
     theAPP.on_execute()
 
