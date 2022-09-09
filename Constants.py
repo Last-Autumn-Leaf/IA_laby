@@ -25,26 +25,3 @@ WALL= '1'
 EMPTY_CASE= '0'
 START_CASE= 'S'
 
-prolog_dict={
-COIN :'coin',
-TREASURE :'treasure',
-EXIT :'exit',
-OBSTACLE :'obstacle',
-MONSTER :'monster',
-WALL:'wall',
-EMPTY_CASE:'empty',
-START_CASE:'empty',
-
-
-}
-
-adjacent_rule="adjacent(X1,Y1,X2,Y2):- " \
-             "  (abs(X1-X2)=:=1,Y1=:=Y2);" \
-             "  (abs(Y1-Y2)=:=1,X1=:=X2).\n"
-
-def create_invalid_rule(n,m):
-    return "invalid(x,y):- x<0;x>={};y<0;y>={}.\n".format(n,m)
-
-action_rule="action(X1,Y1,X2,Y2) :-" \
-            "adjacent(X1,Y1,X2,Y2),not("+prolog_dict[WALL]+"(X2,Y2))," \
-            "not(invalid(X2,Y2)).\n"

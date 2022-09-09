@@ -1,6 +1,6 @@
 wall(0,0).		empty(0,1).		wall(0,2).		
 wall(1,0).		empty(1,1).		wall(1,2).		
 wall(2,0).		exit(2,1).		wall(2,2).		
-adjacent(X1,Y1,X2,Y2):-   (abs(X1-X2)==1,Y1==Y2);  (abs(Y1-Y2)==1,X1==X2).
-invalid(x,y):- x<0;x>=3;y<0;y>=3.
+adjacent(X1,Y1,X2,Y2):- (( Y2 is Y1+1 ; Y2 is Y1-1 ), X2 is X1); (( X2 is X1+1 ; X2 is X1-1 ), Y2 is Y1).
+invalid(X,Y):- X<0;X>=3;Y<0;Y>=3.
 action(X1,Y1,X2,Y2) :-adjacent(X1,Y1,X2,Y2),not(wall(X2,Y2)),not(invalid(X2,Y2)).
