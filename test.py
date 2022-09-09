@@ -13,6 +13,12 @@ if __name__ == '__main__':
             current=maze[i][j]
             prolog_file.write('{}({},{}).\t\t'.format(prolog_dict[current],i,j))
         prolog_file.write('\n')
+    prolog_file.write(adjacent_rule)
+    prolog_file.write(create_invalid_rule(len(maze),len(maze[0])))
+    prolog_file.write(action_rule)
+
+
+
     prolog_file.close()
     #['prolog/map'].
 
