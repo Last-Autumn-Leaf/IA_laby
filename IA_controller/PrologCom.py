@@ -11,7 +11,7 @@ OBSTACLE :'obstacle',
 MONSTER :'monster',
 WALL:'wall',
 EMPTY_CASE:'empty',
-START_CASE:'empty',
+START_CASE:'start',
 
 
 }
@@ -74,6 +74,7 @@ class PrologCom:
 
     def getGoal(self):
         ...
+
 
 if __name__ == '__main__':
     setCorrectCHWD()
