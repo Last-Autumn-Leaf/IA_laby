@@ -1,6 +1,7 @@
 from swiplserver import PrologMQI
 
 from  Constants import  *
+from IA_controller.Helper_fun import setCorrectCHWD
 
 prolog_dict={
 COIN :'coin',
@@ -30,6 +31,16 @@ action_rule="action(X1,Y1,X2,Y2) :- not("+prolog_dict[WALL]+"(X1,Y1))," \
 
 
 class PrologCom:
+
+    def __init__(self,maze):
+        self.maze=maze
+        self.mqi=PrologMQI()
+        self.prolog_thread=self.mqi.create_thread()
+        self.prolog_thread.query("[{}]".format(self.create_prolog_file(maze)))
+        self.n=len(maze)
+        self.m=len(maze[0])
+        self.createNeighborsMap()
+
     def create_prolog_file(self,maze):
         prologfile_name='prolog/map'
         prolog_file=open(prologfile_name,'w')
@@ -45,18 +56,9 @@ class PrologCom:
         return prologfile_name
 
 
-    def __init__(self,maze):
-        self.maze=maze
-        self.mqi=PrologMQI()
-        self.prolog_thread=self.mqi.create_thread()
-        self.prolog_thread.query("[{}]".format(self.create_prolog_file(maze)))
-        self.n=len(maze)
-        self.m=len(maze[0])
-        self.createNeighborsMap()
-
-
     def getAction(self,x,y):
-        result= [ (d["R1"],d["R2"]) if type(d)==dict else [] for d in self.prolog_thread.query("action({},{},R1,R2).".format(x,y)) if type(d)==dict]
+        result= [ (d["R1"],d["R2"]) if type(d)==dict else []
+            for d in self.prolog_thread.query("action({},{},R1,R2).".format(x,y)) if type(d)==dict]
         return result
 
 
@@ -70,3 +72,7 @@ class PrologCom:
     def getNeighborsMap(self):
         return self.neighbors_map
 
+
+
+if __name__ == '__main__':
+    setCorrectCHWD()

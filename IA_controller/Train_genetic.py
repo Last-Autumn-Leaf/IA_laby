@@ -1,6 +1,7 @@
 from random import random
 
 from Constants import *
+from IA_controller.Helper_fun import setCorrectCHWD
 
 POP_SIZE = 100
 create_random_attribute = lambda: [random.randrange(1, MAX_ATTRIBUTE) for i in range(NUM_ATTRIBUTES)]
@@ -21,3 +22,6 @@ class genetic_train:
         # FR possède POP_size Alist en clé
 
 
+
+if __name__ == '__main__':
+    setCorrectCHWD()
