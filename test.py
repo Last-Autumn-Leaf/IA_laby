@@ -8,6 +8,6 @@ if __name__ == '__main__':
 
     maze=theAPP.maze.maze
     prolog_com=PrologCom(maze)
-    print(prolog_com.getAction(1,1))
+    print(prolog_com.getNeighborsMap())
     theAPP.on_execute()
 

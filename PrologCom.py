@@ -24,7 +24,7 @@ adjacent_rule="adjacent(X1,Y1,X2,Y2):- " \
 def create_invalid_rule(n,m):
     return "invalid(X,Y):- X<0;X>={};Y<0;Y>={}.\n".format(n,m)
 
-action_rule="action(X1,Y1,X2,Y2) :-" \
+action_rule="action(X1,Y1,X2,Y2) :- not("+prolog_dict[WALL]+"(X1,Y1))," \
             "adjacent(X1,Y1,X2,Y2),not("+prolog_dict[WALL]+"(X2,Y2))," \
             "not(invalid(X2,Y2)).\n"
 
@@ -46,11 +46,27 @@ class PrologCom:
 
 
     def __init__(self,maze):
+        self.maze=maze
         self.mqi=PrologMQI()
         self.prolog_thread=self.mqi.create_thread()
         self.prolog_thread.query("[{}]".format(self.create_prolog_file(maze)))
+        self.n=len(maze)
+        self.m=len(maze[0])
+        self.createNeighborsMap()
+
 
     def getAction(self,x,y):
-        result= [ (d["R1"],d["R2"]) for d in self.prolog_thread.query("action({},{},R1,R2).".format(x,y))]
+        result= [ (d["R1"],d["R2"]) if type(d)==dict else [] for d in self.prolog_thread.query("action({},{},R1,R2).".format(x,y)) if type(d)==dict]
         return result
+
+
+    def createNeighborsMap(self):
+        self.neighbors_map={}
+        for i in range(self.n):
+            for j in range(self.m):
+                if self.maze[i][j] != WALL :
+                    self.neighbors_map[(i,j)]=self.getAction(i,j)
+
+    def getNeighborsMap(self):
+        return self.neighbors_map
 
