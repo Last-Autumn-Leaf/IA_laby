@@ -1,11 +1,9 @@
-import os
 from queue import Queue
-import pathlib
 
+from Constants import *
 from IA_controller.Helper_fun import setCorrectCHWD
 from IA_controller.PrologCom import PrologCom
 from IA_controller.visualizer import App_2
-from  Constants import  *
 
 
 def bfs(depart,goal,neighborMap):
@@ -30,13 +28,13 @@ def planification_result():
 
     depart = prolog_com.getCoordFromType(START_CASE)[0]
     goal = prolog_com.getCoordFromType(EXIT)[0]
-    neighbor_map = prolog_com.getNeighborsMap()
+    if type(depart) ==tuple and type(goal)==tuple :
+        neighbor_map = prolog_com.getNeighborsMap()
+        ok, path = bfs(depart, goal, neighbor_map)
 
-    ok, path = bfs(depart, goal, neighbor_map)
-
-    if ok:
-        theAPP.set_visited(path)
-    print(path)
+        if ok:
+            theAPP.set_visited(path)
+        print(path)
 
 if __name__ == '__main__':
     setCorrectCHWD()

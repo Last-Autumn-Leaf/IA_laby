@@ -1,6 +1,6 @@
 wall(0,0).		start(0,1).		wall(0,2).		wall(0,3).		
-wall(1,0).		empty(1,1).		empty(1,2).		wall(1,3).		
-wall(2,0).		empty(2,1).		empty(2,2).		wall(2,3).		
+wall(1,0).		empty(1,1).		monster(1,2).		wall(1,3).		
+wall(2,0).		empty(2,1).		monster(2,2).		wall(2,3).		
 wall(3,0).		exit(3,1).		wall(3,2).		wall(3,3).		
 adjacent(X1,Y1,X2,Y2):- (( Y2 is Y1+1 ; Y2 is Y1-1 ), X2 is X1); (( X2 is X1+1 ; X2 is X1-1 ), Y2 is Y1).
 invalid(X,Y):- X<0;X>=4;Y<0;Y>=4.

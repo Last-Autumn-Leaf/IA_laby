@@ -94,5 +94,5 @@ if __name__ == '__main__':
     prolog_com=PrologCom(maze)
     lol = prolog_com.getCoordFromType(MONSTER)
     print(lol)
-    print('A')
+
     exit()

@@ -3,7 +3,6 @@ import os
 import pathlib
 import pygame
 from Constants import MONSTER
-
 def setCorrectCHWD():
     if pathlib.Path.cwd().name=="IA_controller" :
         parent_path=pathlib.Path.cwd().parents[0]
@@ -17,7 +16,6 @@ def getMazeFromFile(filename='assets/mazeMedium_0'):
             maze.append(row)
     return maze
 
-
 def getMonsterCoord(maze):
     result=[]
     for i in range(len(maze)):
@@ -25,7 +23,6 @@ def getMonsterCoord(maze):
             if maze[i][j] == MONSTER:
                 result.append((i,j))
     return result
-
 
 def draw_rect_alpha(surface, color, rect):
     shape_surf = pygame.Surface(pygame.Rect(rect).size, pygame.SRCALPHA)
