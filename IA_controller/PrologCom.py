@@ -1,4 +1,4 @@
-from swiplserver import PrologMQI
+from swiplserver import PrologMQI, PrologError
 
 from  Constants import  *
 from IA_controller.Helper_fun import setCorrectCHWD, getMazeFromFile
@@ -72,16 +72,27 @@ class PrologCom:
     def getNeighborsMap(self):
         return self.neighbors_map
 
-    def getGoal(self):
-        ...
+    def getCoordFromType(self, x):
+
+        if x  in prolog_dict :
+            x=prolog_dict[x]
+        x = x + "(R1,R2)."
+        try :
+            result = [(d["R1"], d["R2"]) if type(d)==dict else []
+                  for d in self.prolog_thread.query(x) if type(d)==dict]
+        except PrologError:
+            return []
+        return result
+
 
 
 if __name__ == '__main__':
     setCorrectCHWD()
 
-    map_file_name='assets/test_Map'
+    map_file_name='assets/mazeMedium_3'
     maze=getMazeFromFile(map_file_name)
     prolog_com=PrologCom(maze)
-
+    lol = prolog_com.getCoordFromType(MONSTER)
+    print(lol)
     print('A')
     exit()
