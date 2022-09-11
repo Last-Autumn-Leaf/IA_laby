@@ -35,7 +35,8 @@ def create_rule(rule_matrix,input_A,input_B,output,operator='and',name=membershi
     return rules
 
 def fuzzy_command(pos_joueur, pos_obstacle):
-    pos_joueur =
-    pos_obstacle =
-    taille_obstacle =
-    return pwm_command
+    pass
+    pos_joueur = ...
+    pos_obstacle =...
+    taille_obstacle =...
+    #return pwm_command
