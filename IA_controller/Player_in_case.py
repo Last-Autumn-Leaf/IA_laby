@@ -7,4 +7,4 @@ class PlayerInCaseEnv():
     # Coord = position dans le WORLD
     def __init__(self, coord_joueur):
         self.coord_joueur = coord_joueur
-        self.pos_obstacle =
+        self.pos_obstacle =...
