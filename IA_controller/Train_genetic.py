@@ -121,6 +121,11 @@ class MonsterOrganizer:
 
         return uniformSelection(p1,p2),uniformSelection(p1,p2)
 
+
+    def test_crossOver(self,p1,p2):
+        cop = random.randrange(1, len(p1) - 2) # random cross-Over Point
+        return np.concatenate((p1[:cop], p2[cop:])),np.concatenate((p2[:cop], p1[cop:]))
+
     def doCrossOver(self,pairs):
         halfpop1 = pairs[0]
         halfpop2 = pairs[1]
