@@ -11,6 +11,7 @@ create_random_attribute = lambda: [random.randrange(1, MAX_ATTRIBUTE) for i in r
 
 class MonsterOrganizer:
     mask=str(2+ math.ceil( math.log2(MAX_ATTRIBUTE) ))
+
     def __init__ (self,monsterObject,monsterPos):
         self.monsterObject=monsterObject
         self.pos=monsterPos
@@ -29,6 +30,15 @@ class MonsterOrganizer:
         # For testing
         self.evolution=[]
         self.mean_evolution=[]
+        self.crossOverFunction =self.randomPointCrossOver
+
+    mse = lambda self,x,y : 1/( (x-y)**2 +1)
+    GOAL = [1000 for x in range(12)]
+    def test_Fitness_fun(self,dummy):
+        score=0
+        for x,y in zip(dummy.attributes,self.GOAL) :
+            score += self.mse(x,y)
+        return score
 
 
 
@@ -38,7 +48,9 @@ class MonsterOrganizer:
             self.mean_F=0
             for i,attr in enumerate(self.d_val) :
                 self.dummy.attributes=attr
-                R,F=self.monsterObject.mock_fight(self.dummy)
+                #R,F=self.monsterObject.mock_fight(self.dummy)
+                R=0
+                F=self.test_Fitness_fun(self.dummy)
                 self.f_val[i]=np.array((R,F))
                 self.F_sum +=F
                 self.max_F=max(self.max_F,F)
@@ -51,7 +63,6 @@ class MonsterOrganizer:
             self.mean_F /=i
             self.mean_evolution.append(self.mean_F)
             self.evolution.append(self.max_F)
-
 
     def encode(self):
         def dectobin( d_array):
@@ -75,8 +86,6 @@ class MonsterOrganizer:
 
     def doSelection(self):
 
-        # TODO : we should implement that we always keep the 10 % best population
-
         indexes_prob = np.random.rand(POP_SIZE)
         roulette = [0] * POP_SIZE
         cpt = 0
@@ -95,7 +104,6 @@ class MonsterOrganizer:
         idx2 = indexes[int(POP_SIZE / 2):]
 
         return [self.b_val[idx1, :], self.b_val[idx2, :]]
-
 
     def randomPointCrossOver(self,p1,p2):
         cop = random.randint(1, len(p1) - 2) # random cross-Over Point
@@ -122,8 +130,7 @@ class MonsterOrganizer:
             p1 = p1.copy()
             p2 = p2.copy()
             if random.random() < self.crossover_prob:
-                #halfpop1[index],halfpop2[index] =self.randomPointCrossOver(p1,p2)
-                halfpop1[index],halfpop2[index]=self.uniformCrossover(p1,p2)
+                halfpop1[index],halfpop2[index]=self.crossOverFunction(p1,p2)
 
         return np.vstack((halfpop1, halfpop2))
 
@@ -133,7 +140,7 @@ class MonsterOrganizer:
                 chromosome=list(chromosome)[2:]
                 if random.random() < self.mutation_prob :
                     # mutate only one bit
-                    bit_selected = random.randint(1, len(chromosome) - 1)
+                    bit_selected = random.randint(0, len(chromosome) - 1)
                     chromosome[bit_selected] =str(int(chromosome[bit_selected])^1)
 
                 #for k,bit in enumerate(chromosome) : # every bit as a probability of pm to mutate
@@ -166,7 +173,7 @@ class genetic_trainer:
     def __init__(self,monsterList,monsterCoord):
         self.monster_list=[ MonsterOrganizer(m,pos) for m,pos in zip(monsterList,monsterCoord)]
 
-        # Perform Elitism, that mean 10% of fittest population
+
         # goes to the next generation
         # From 50% of fittest population, Individuals
         # will mate to produce offspring
@@ -174,7 +181,7 @@ class genetic_trainer:
     def test(self):
 
         for i,mob in enumerate(self.monster_list ):
-            for j in range(200) :
+            for j in range(50) :
                 mob.do_step()
                 mob.new_gen()
             plt.plot(mob.evolution)
