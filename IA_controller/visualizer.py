@@ -37,17 +37,16 @@ class App_2 (App):
 
 
     def doForce_Y(self,force):
-        for i in range(int(force / 10)):
+        for i in range(abs(int(force / 10))):
 
             if force > 0:
                 self.on_AI_input('DOWN')
             else:
                 self.on_AI_input('UP')
 
-                self.on_AI_input('UP')
-
     def doForce_X(self,force):
-        for i in range(int(force / 10)):
+        for i in range(abs(int(force / 10))):
+
             if force > 0:
                 self.on_AI_input('RIGHT')
             else:
@@ -74,10 +73,10 @@ class App_2 (App):
                 dO_y=self.maze.obstacleList[0].centery - self.player.y
                 dO_x=self.maze.obstacleList[0].centerx -self.player.x
 
-                print(dG_x,dG_y)
                 force_Y=self.IA_controller_Y(dG_y,dO_y)
                 force_X=self.IA_controller_X(dG_x,dO_x)
                 print('forceX = {} | forceY = {}'.format(force_X,force_Y))
+
                 self.doForce_X(force_X)
                 self.doForce_Y(force_Y)
 

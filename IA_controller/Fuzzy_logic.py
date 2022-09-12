@@ -63,7 +63,7 @@ class FuzzPlayer:
         Pcommand.accumulation_method = np.fmax
 
         self.create_membership_function(DtoGoal, self.tile_size, n_function=3)
-        self.create_membership_function(DtoObst, self.tile_size*10, n_function=3)
+        self.create_membership_function(DtoObst, self.tile_size, n_function=3)
         self.create_membership_function(Pcommand, 50, n_function=3, saturation=False)
 
         '''DtoGoal['neg'] = fuzz.trapmf(DtoGoal.universe, [-0.25, -0.25, -0.1, -0.05])
@@ -135,6 +135,7 @@ if __name__ == '__main__':
     fuzz_ctrl_y=FuzzPlayer(theAPP.maze.tile_size_y)
     fuzz_ctrl_x.createFuzzyController()
     fuzz_ctrl_y.createFuzzyController()
+
 
     # for var in fuzz_ctrl_x.createFuzzyController().ctrl.fuzzy_variables:
     #     var.view()
