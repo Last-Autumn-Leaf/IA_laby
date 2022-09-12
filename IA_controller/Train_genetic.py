@@ -1,4 +1,5 @@
 import math
+import matplotlib.pyplot as plt
 import numpy as np
 from Constants import *
 from IA_controller.Helper_fun import setCorrectCHWD, getMonsterCoord
@@ -22,6 +23,9 @@ class MonsterOrganizer:
         self.dummy=Player()
         self.currentGen=0
         self.F_sum=0
+        self.max_F=0
+        # For testing
+        self.evolution=[]
 
     def eval_fit(self):
         self.F_sum=0
@@ -31,10 +35,13 @@ class MonsterOrganizer:
                 R,F=self.monsterObject.mock_fight(self.dummy)
                 self.f_val[i]=np.array((R,F))
                 self.F_sum +=F
+                self.max_F=max(self.max_F,F)
                 if R==4 :
                     self.beatten=True
-                    self.population=attr
+                    self.d_val=attr
+                    print("Attribute found")
                     break
+            self.evolution.append(self.max_F)
 
     def encode(self):
         def dectobin( d_array):
@@ -98,28 +105,30 @@ class MonsterOrganizer:
         for i,individu in enumerate( self.b_val ): # population
             for j,chromosome in enumerate(individu) : # individu
                 chromosome=list(chromosome)[2:]
-                for k,bit in enumerate(chromosome) : # every bit
+                for k,bit in enumerate(chromosome) : # every bit as a probability of pm to mutate
                     chromosome[k] =str(int(bit)^1) if random.random()< self.mutation_prob else bit
                 self.b_val[i, j]=''.join(chromosome) #'0b'+''.join(chromosome)
     def new_gen(self):
-        self.encode()
-        pairs=self.doSelection()
-        self.b_val=self.doCrossOver(pairs)
-        self.doMutation()
-        #crossOver
-        #Mutation
-        self.currentGen+=1
+        if not self.beatten:
+            self.encode()
+            pairs=self.doSelection()
+            self.b_val=self.doCrossOver(pairs)
+            self.doMutation()
+            #crossOver
+            #Mutation
+            self.currentGen+=1
 
     def do_step(self):
-        self.decode()
-        self.eval_fit()
+        if not self.beatten:
+            self.decode()
+            self.eval_fit()
 
     def __getitem__(self, item):
         if self.beatten :
-            return self.population
-        return self.population[item]
+            return self.d_val
+        return self.d_val[item]
     def __repr__(self):
-        return f"Monster at {self.pos}, attributeFound?={self.beatten}"
+        return f"Monster at {self.pos},maxF={self.max_F} ,attributeFound?={self.beatten}"
 
     def __bool__(self):
         return self.beatten
@@ -137,13 +146,14 @@ class genetic_trainer:
         # will mate to produce offspring
 
     def test(self):
-        for mob in self.monster_list :
-            mob.do_step()
-            mob.new_gen()
 
-
-
-
+        for i,mob in enumerate(self.monster_list ):
+            for j in range(200) :
+                mob.do_step()
+                mob.new_gen()
+            plt.plot(mob.evolution)
+            print(mob)
+        plt.show()
 
 
 
