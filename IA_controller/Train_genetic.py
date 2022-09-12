@@ -25,24 +25,33 @@ class MonsterOrganizer:
         self.currentGen=0
         self.F_sum=0
         self.max_F=0
+        self.mean_F=0
         # For testing
         self.evolution=[]
+        self.mean_evolution=[]
+
+
 
     def eval_fit(self):
         self.F_sum=0
         if not self.beatten :
+            self.mean_F=0
             for i,attr in enumerate(self.d_val) :
                 self.dummy.attributes=attr
                 R,F=self.monsterObject.mock_fight(self.dummy)
                 self.f_val[i]=np.array((R,F))
                 self.F_sum +=F
                 self.max_F=max(self.max_F,F)
+                self.mean_F+=F
                 if R==4 :
                     self.beatten=True
                     self.d_val=attr
                     print("Attribute found")
                     break
+            self.mean_F /=i
+            self.mean_evolution.append(self.mean_F)
             self.evolution.append(self.max_F)
+
 
     def encode(self):
         def dectobin( d_array):
@@ -58,7 +67,7 @@ class MonsterOrganizer:
         def bintodec( b_array):
             temp = b_array.copy()
             for i, val in enumerate(temp):
-                temp[i] = int(val, 2)
+                temp[i] = int(val, 2)   # NO CAPPING if int(val, 2) <MAX_ATTRIBUTE else MAX_ATTRIBUTE
             return temp
 
         for i,attr in enumerate(self.b_val ):
@@ -66,7 +75,7 @@ class MonsterOrganizer:
 
     def doSelection(self):
 
-        # TODO : we should implement that we alays keep the 10 % best population
+        # TODO : we should implement that we always keep the 10 % best population
 
         indexes_prob = np.random.rand(POP_SIZE)
         roulette = [0] * POP_SIZE
@@ -88,6 +97,22 @@ class MonsterOrganizer:
         return [self.b_val[idx1, :], self.b_val[idx2, :]]
 
 
+    def randomPointCrossOver(self,p1,p2):
+        cop = random.randint(1, len(p1) - 2) # random cross-Over Point
+        return np.concatenate((p1[:cop], p2[cop:])),np.concatenate((p2[:cop], p1[cop:]))
+
+    def uniformCrossover(self,p1,p2):
+        def uniformSelection(p1,p2):
+            child=''
+            for i in range(0,len(p1)):
+                if random.random() < 0.5:
+                    child += p1[i]
+                else:
+                    child += p2[i]
+                return child
+
+        return uniformSelection(p1,p2),uniformSelection(p1,p2)
+
     def doCrossOver(self,pairs):
         halfpop1 = pairs[0]
         halfpop2 = pairs[1]
@@ -97,17 +122,22 @@ class MonsterOrganizer:
             p1 = p1.copy()
             p2 = p2.copy()
             if random.random() < self.crossover_prob:
-                cop = random.randint(1, len(p1) - 2) # random cross-Over Point
-                halfpop1[index] = np.concatenate((p1[:cop], p2[cop:]))
-                halfpop2[index] = np.concatenate((p2[:cop], p1[cop:]))
+                #halfpop1[index],halfpop2[index] =self.randomPointCrossOver(p1,p2)
+                halfpop1[index],halfpop2[index]=self.uniformCrossover(p1,p2)
+
         return np.vstack((halfpop1, halfpop2))
 
     def doMutation(self):
         for i,individu in enumerate( self.b_val ): # population
             for j,chromosome in enumerate(individu) : # individu
                 chromosome=list(chromosome)[2:]
-                for k,bit in enumerate(chromosome) : # every bit as a probability of pm to mutate
-                    chromosome[k] =str(int(bit)^1) if random.random()< self.mutation_prob else bit
+                if random.random() < self.mutation_prob :
+                    # mutate only one bit
+                    bit_selected = random.randint(1, len(chromosome) - 1)
+                    chromosome[bit_selected] =str(int(chromosome[bit_selected])^1)
+
+                #for k,bit in enumerate(chromosome) : # every bit as a probability of pm to mutate
+                #    chromosome[k] =str(int(bit)^1) if random.random()< self.mutation_prob else bit
                 self.b_val[i, j]=''.join(chromosome) #'0b'+''.join(chromosome)
     def new_gen(self):
         if not self.beatten:
@@ -115,8 +145,6 @@ class MonsterOrganizer:
             pairs=self.doSelection()
             self.b_val=self.doCrossOver(pairs)
             self.doMutation()
-            #crossOver
-            #Mutation
             self.currentGen+=1
 
     def do_step(self):
@@ -135,12 +163,9 @@ class MonsterOrganizer:
         return self.beatten
 
 class genetic_trainer:
-    def __init__(self,monsterList,monsterCoord,pc=0.9,pm=0.01):
+    def __init__(self,monsterList,monsterCoord):
         self.monster_list=[ MonsterOrganizer(m,pos) for m,pos in zip(monsterList,monsterCoord)]
-        self.pc=pc
-        self.pm=pm
 
-        self.n_params=NUM_ATTRIBUTES
         # Perform Elitism, that mean 10% of fittest population
         # goes to the next generation
         # From 50% of fittest population, Individuals
@@ -153,6 +178,7 @@ class genetic_trainer:
                 mob.do_step()
                 mob.new_gen()
             plt.plot(mob.evolution)
+            plt.plot(mob.mean_evolution)
             print(mob)
         plt.show()
 
@@ -160,6 +186,7 @@ class genetic_trainer:
 
 
 if __name__ == '__main__':
+    random.seed(0)
     setCorrectCHWD()
     map_file_name='assets/test_Map'
     theAPP = App_2(map_file_name)
@@ -169,5 +196,5 @@ if __name__ == '__main__':
 
 
 
-    theAPP.on_execute()
+    #theAPP.on_execute()
 
