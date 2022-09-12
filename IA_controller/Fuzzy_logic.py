@@ -63,7 +63,7 @@ class FuzzPlayer:
         Pcommand.accumulation_method = np.fmax
 
         self.create_membership_function(DtoGoal, self.tile_size, n_function=3)
-        self.create_membership_function(DtoObst, self.tile_size, n_function=3)
+        self.create_membership_function(DtoObst, self.tile_size*10, n_function=3)
         self.create_membership_function(Pcommand, 50, n_function=3, saturation=False)
 
         '''DtoGoal['neg'] = fuzz.trapmf(DtoGoal.universe, [-0.25, -0.25, -0.1, -0.05])
@@ -81,6 +81,11 @@ class FuzzPlayer:
         RULES_MATRIX = [[1, 0, 0],
                         [2, 1, 0],
                         [2, 2, 1]]
+
+        # RULES_MATRIX = [[1, 2, 2],
+        #                 [0, 1, 2],
+        #                 [0, 0, 1]]
+
         rules = self.create_rule(RULES_MATRIX, DtoGoal, DtoObst, Pcommand)
         '''rules.append(ctrl.Rule(antecedent=(DtoGoal['neg'] & DtoObst['neg']), consequent=Pcommand['zero']))
         rules.append(ctrl.Rule(antecedent=(DtoGoal['neg'] & DtoObst['pos']), consequent=Pcommand['neg']))
@@ -130,6 +135,16 @@ if __name__ == '__main__':
     fuzz_ctrl_y=FuzzPlayer(theAPP.maze.tile_size_y)
     fuzz_ctrl_x.createFuzzyController()
     fuzz_ctrl_y.createFuzzyController()
+
+    # for var in fuzz_ctrl_x.createFuzzyController().ctrl.fuzzy_variables:
+    #     var.view()
+    # plt.show()
+    #
+    # for var in fuzz_ctrl_x.createFuzzyController().ctrl.fuzzy_variables:
+    #     var.view()
+    # plt.show()
+
+
     theAPP.setIA_controller(fuzz_ctrl_x.getOutput,fuzz_ctrl_y.getOutput)
 
     theAPP.on_execute()
