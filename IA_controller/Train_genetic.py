@@ -10,6 +10,7 @@ POP_SIZE = 100
 create_random_attribute = lambda: [random.randrange(1, MAX_ATTRIBUTE) for i in range(NUM_ATTRIBUTES)]
 
 class MonsterOrganizer:
+    mask=str(2+ math.ceil( math.log2(MAX_ATTRIBUTE) ))
     def __init__ (self,monsterObject,monsterPos):
         self.monsterObject=monsterObject
         self.pos=monsterPos
@@ -47,7 +48,7 @@ class MonsterOrganizer:
         def dectobin( d_array):
             temp = d_array.copy().astype(object)
             for i, val in enumerate(temp):
-                temp[i] = bin(val)
+                temp[i] = format(val, '#0'+self.mask+'b')
             return temp
 
         for i,attr in enumerate(self.d_val ):
@@ -138,7 +139,7 @@ class genetic_trainer:
         self.monster_list=[ MonsterOrganizer(m,pos) for m,pos in zip(monsterList,monsterCoord)]
         self.pc=pc
         self.pm=pm
-        self.nbits=math.ceil( math.log2(MAX_ATTRIBUTE) )
+
         self.n_params=NUM_ATTRIBUTES
         # Perform Elitism, that mean 10% of fittest population
         # goes to the next generation
