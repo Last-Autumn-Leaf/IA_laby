@@ -22,6 +22,7 @@ class App_2 (App):
         self.new_pos=(0,0)
         self.old_theta_prime=0
         self.FOLLOW_MOUSE=False
+        self.on_init()
 
 
     def on_render(self):
@@ -121,12 +122,11 @@ class App_2 (App):
 
 
     def on_execute(self):
-        self.on_init()
 
         #compute dmin
         x, y = self.player.get_size()
         self.dmin = np.sqrt(x ** 2 + y ** 2)
-
+        self.dmin = 0
         while self._running:
             self._clock.tick(GAME_CLOCK)
             for event in pygame.event.get():
@@ -208,7 +208,7 @@ class App_2 (App):
 
                     rO, thethaO = self.cart2Polar(ox, oy)
                     if rO <= self.dmin :
-                        theta_prime+=self.IA_controller_angle(thethaO-thethaG)
+                        theta_prime+=self.IA_controller_angle(thethaO-thethaG,rO)
                         moy+=1
 
                 theta_prime =theta_prime / moy if moy !=0 else 0

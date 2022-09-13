@@ -113,13 +113,14 @@ class FuzzPlayer:
 
         return force
 
-    def getOutputFromAngles(self,input):
-        self.sim.input['angle'] = input
+    def getOutputFromAngles(self,angle,rayon):
+        self.sim.input['angle'] = angle
+        self.sim.input['angle'] = rayon
         self.sim.compute()
 
-        angle = self.sim.output['PlayerCommand']
+        output = self.sim.output['PlayerCommand']
 
-        return angle
+        return output
 
     def set_fuzzy_angles_sim(self,tile_size,player_size):
 
@@ -129,7 +130,7 @@ class FuzzPlayer:
         minR_radius = getRadius ( [x/2 for x in player_size] ) + getRadius ( [x/2 for x in tile_size] )
 
         angle = ctrl.Antecedent(np.linspace(-np.pi, np.pi, 1000), 'angle')
-        rayon = ctrl.Antecedent(np.linspace(0, max_R +1, 1000), 'rayon')
+        rayon = ctrl.Antecedent(np.linspace(0, max_R +50, 1000), 'rayon')
         Pcommand = ctrl.Consequent(np.linspace(-2*np.pi, 2*np.pi, 1000), 'PlayerCommand', defuzzify_method='centroid')
 
         # Accumulation (accumulation_method) methods for fuzzy variables:
@@ -142,14 +143,24 @@ class FuzzPlayer:
         rayon["μ_2"] =fuzz.trapmf(rayon.universe,[minR_radius+(max_R-minR_radius)/2 ,max_R,2*max_R,2*max_R])
 
         self.create_membership_function(angle, np.pi/2, n_function=3)
-        self.create_membership_function(Pcommand, np.pi/2, n_function=3, saturation=False)
+        self.create_membership_function(Pcommand, np.pi, n_function=3, saturation=False)
 
 
         rules = []
+
+        rules.append(ctrl.Rule(antecedent=(rayon["μ_2"]  ), consequent=Pcommand["μ_1"]))
         rules.append(ctrl.Rule(antecedent=(angle["μ_0"] ), consequent=Pcommand["μ_1"]))
         rules.append(ctrl.Rule(antecedent=(angle["μ_2"] ), consequent=Pcommand["μ_1"]))
         rules.append(ctrl.Rule(antecedent=(angle["μ_0"] & angle["μ_1"]) , consequent=Pcommand["μ_0"]))
         rules.append(ctrl.Rule(antecedent=(angle["μ_2"] & angle["μ_1"]) , consequent=Pcommand["μ_2"]))
+
+        rules.append(ctrl.Rule(antecedent=(rayon["μ_0"] & angle["μ_0"] ), consequent=Pcommand["μ_0"]))
+        rules.append(ctrl.Rule(antecedent=(rayon["μ_0"] & angle["μ_2"] ), consequent=Pcommand["μ_2"]))
+
+        rules.append(ctrl.Rule(antecedent=(rayon["μ_1"] & angle["μ_0"] ), consequent=Pcommand["μ_1"]))
+        rules.append(ctrl.Rule(antecedent=(rayon["μ_1"] & angle["μ_2"] ), consequent=Pcommand["μ_1"]))
+
+
 
         for rule in rules:
             rule.and_func = np.fmin
@@ -163,15 +174,13 @@ class FuzzPlayer:
 
 
 if __name__ == '__main__':
-    SHOW_VARIABLE=True
+    SHOW_VARIABLE=False
     setCorrectCHWD()
     map_file_name = 'assets/test_Map'
     theAPP = App_2(map_file_name)
-    # On init is called in on_execute !!!!
-    theAPP.on_init()
 
 
-    tile_size=(theAPP.maze.tile_size_y, theAPP.maze.tile_size_y)
+    tile_size=(theAPP.maze.tile_size_x, theAPP.maze.tile_size_y)
 
     fuzz_ctrl = FuzzPlayer()
     fuzz_ctrl.set_fuzzy_angles_sim(tile_size,theAPP.player.get_size())
@@ -183,4 +192,4 @@ if __name__ == '__main__':
     theAPP.setIA_controller_angles(fuzz_ctrl.getOutputFromAngles)
     #theAPP.setIA_controller(fuzz_ctrl_x.getOutput,fuzz_ctrl_y.getOutput)
 
-    #theAPP.on_execute()
+    theAPP.on_execute()
