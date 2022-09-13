@@ -1,7 +1,7 @@
 import numpy as np
 import pygame
 
-from Constants import GAME_CLOCK, WHITE, GREEN
+from Constants import GAME_CLOCK, WHITE, GREEN, BLUE
 from Games2D import App
 from IA_controller.Helper_fun import draw_rect_alpha
 
@@ -15,6 +15,11 @@ class App_2 (App):
         self.Fx=0
         self.Fy=0
         self.vectors_to_show=[]
+        self.old_pos=(0,0)
+        self.new_pos=(0,0)
+        self.old_theta_prime=0
+        self.FOLLOW_MOUSE=False
+
 
     def on_render(self):
         self.maze_render()
@@ -36,6 +41,9 @@ class App_2 (App):
             pygame.draw.line(display_surf, WHITE, player_pos,
                          (x,y))
 
+
+        pygame.draw.rect(display_surf,GREEN,(self.player.x,self.player.y, self.player.size_x,self.player.size_y),width=3)
+        pygame.draw.circle(display_surf,GREEN,player_pos,self.dmin,width=3)
         pygame.draw.line(display_surf, GREEN, player_pos,(self.player.x +20*self.Fx, self.player.y+20*self.Fy))
     def set_visited(self,v):
         self.visited_cases=v
@@ -83,8 +91,16 @@ class App_2 (App):
                 self.on_AI_input('RIGHT')
             else:
                 self.on_AI_input('LEFT')
+
+    getVitesse = lambda self : np.sqrt((self.new_pos[0]-self.old_pos[0])**2+ (self.new_pos[1]-self.old_pos[1])**2)
+
+
     def on_execute(self):
         self.on_init()
+
+
+        x,y=self.player.get_size()
+        self.dmin=np.sqrt(x**2 +y**2 )
 
         while self._running:
             self._clock.tick(GAME_CLOCK)
@@ -136,36 +152,49 @@ class App_2 (App):
                     elif len(self.maze.treasureList) >0 :
                         gx = self.maze.treasureList[0].centerx
                         gy = self.maze.treasureList[0].centery
-                    else :
+                    elif self.maze.exit :
                         gx=self.maze.exit.centerx
                         gy=self.maze.exit.centery
+
+                    if self.FOLLOW_MOUSE:
+                        gx, gy = pygame.mouse.get_pos()
 
                 else :
                     goal = percept[2][0]
                     gy = goal.centery
                     gx = goal.centerx
 
+
+
+
                 self.vectors_to_show.append((gx,gy))
                 gx-= self.player.x
                 gy-= self.player.y
                 theta_prime=0
-                rG, thethaG = self.cart2Polar(gx, gy)
-                minR=np.sqrt((self.player.size_x/2)**2 +(self.player.size_y/2)**2)
                 moy=0
+                rG, thethaG = self.cart2Polar(gx, gy)
+
+                if not allObs :
+                    allObs.append((-gx,-gy))
                 for (ox,oy) in allObs :
                     self.vectors_to_show.append((ox,oy))
                     ox-= self.player.x
                     oy-= self.player.y
 
                     rO, thethaO = self.cart2Polar(ox, oy)
-                    if rO >minR :
-                        theta_prime+= 3*np.pi * np.exp(-rO/1000) * self.IA_controller_angle(thethaO-thethaG)
+                    if rO <= self.dmin :
+                        theta_prime+=self.IA_controller_angle(thethaO-thethaG)
                         moy+=1
-                thethaG -= theta_prime/moy
-                R = 10
+
+                theta_prime =theta_prime / moy if moy !=0 else 0
+                thethaG -= theta_prime
+                self.old_theta_prime=theta_prime
+                self.old_pos=self.player.get_position()
+                R = 5
                 self.Fx, self.Fy = self.Polar2Cart(R, thethaG)
                 self.doForce_X(self.Fx)
                 self.doForce_Y(self.Fy)
+                self.new_pos=self.player.get_position()
 
 
             # self.on_AI_input(instruction)

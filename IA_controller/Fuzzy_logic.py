@@ -126,15 +126,15 @@ class FuzzPlayer:
 
     def test_fuzzy_angles(self):
         angle = ctrl.Antecedent(np.linspace(-np.pi, np.pi, 1000), 'angle')
-        rayon = ctrl.Antecedent(np.linspace(0, 3*self.minR, 1000), 'rayon')
+        #rayon = ctrl.Antecedent(np.linspace(0, 3*self.minR, 1000), 'rayon')
         Pcommand = ctrl.Consequent(np.linspace(-2*np.pi, 2*np.pi, 1000), 'PlayerCommand', defuzzify_method='centroid')
 
         # Accumulation (accumulation_method) methods for fuzzy variables:
         #    np.fmax
         #    np.multiply
         Pcommand.accumulation_method = np.fmax
-        for i in range (3):
-            rayon['μ_'+str(i)]=fuzz.trimf(rayon.universe, [i*self.minR, (i+1)*self.minR, (i+2)*self.minR])
+        #for i in range (3):
+        #    rayon['μ_'+str(i)]=fuzz.trimf(rayon.universe, [i*self.minR, (i+1)*self.minR, (i+2)*self.minR])
 
         self.create_membership_function(angle, np.pi/2, n_function=3)
         self.create_membership_function(Pcommand, np.pi/2, n_function=3, saturation=False)
