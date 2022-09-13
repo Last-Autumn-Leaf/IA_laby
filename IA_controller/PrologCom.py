@@ -84,6 +84,14 @@ class PrologCom:
             return []
         return result
 
+    def GetType(self,coord_case=(0,1)):
+        coord_case = str(coord_case)
+        for key in prolog_dict:
+            # print(self.prolog_thread.query(type+ '(1,13).'))
+            TypetoTest=prolog_dict[key]
+            type_case_test = self.prolog_thread.query(TypetoTest+coord_case + ".")
+            if type_case_test:
+                return TypetoTest
 
 
 if __name__ == '__main__':
@@ -92,7 +100,10 @@ if __name__ == '__main__':
     map_file_name='assets/mazeMedium_3'
     maze=getMazeFromFile(map_file_name)
     prolog_com=PrologCom(maze)
-    lol = prolog_com.getCoordFromType(MONSTER)
+    lol = prolog_com.getCoordFromType(COIN)
+
     print(lol)
+    type_case = prolog_com.GetType(coord_case=(1,13))
+    print(type_case)
 
     exit()
