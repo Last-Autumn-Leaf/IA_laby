@@ -12,6 +12,7 @@ class App_2 (App):
         self.visited_cases=[]
         self.IA_controller_X=None
         self.IA_controller_Y=None
+        self.IA_controller_angle=None
         self.Fx=0
         self.Fy=0
         self.vectors_to_show=[]
