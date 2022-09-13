@@ -1,3 +1,4 @@
+from Constants import PERCEPTION_RADIUS
 from IA_controller.Helper_fun import setCorrectCHWD
 from IA_controller.visualizer import App_2
 
@@ -9,12 +10,8 @@ import matplotlib.pyplot as plt
 
 class FuzzPlayer:
     membership_naming = "μ_"
-    def __init__(self,tile_size,player_size):
-        self.tile_size=tile_size
-        self.px,self.py=player_size
-        self.minR = np.sqrt((self.px / 2) ** 2 + (self.py / 2) ** 2)
-
-
+    def __init__(self):
+        pass
     def create_membership_function(self,ctrl_ant, value, name=membership_naming, n_function=5, saturation=True):
         assert (n_function >= 1)
         vecteur1 = [x - int(n_function / 2) + (0 if not n_function % 2 == 0 else 0.5) for x in range(n_function)]
@@ -124,22 +121,28 @@ class FuzzPlayer:
 
         return angle
 
-    def test_fuzzy_angles(self):
+    def set_fuzzy_angles_sim(self,tile_size,player_size):
+
+        minR= min(player_size) /2 +min(tile_size) /2
+        max_R = PERCEPTION_RADIUS * max(tile_size)
+        getRadius = lambda size : np.sqrt(  size[0]**2 + size[1]**2  )
+        minR_radius = getRadius ( [x/2 for x in player_size] ) + getRadius ( [x/2 for x in tile_size] )
+
         angle = ctrl.Antecedent(np.linspace(-np.pi, np.pi, 1000), 'angle')
-        #rayon = ctrl.Antecedent(np.linspace(0, 3*self.minR, 1000), 'rayon')
+        rayon = ctrl.Antecedent(np.linspace(0, max_R +1, 1000), 'rayon')
         Pcommand = ctrl.Consequent(np.linspace(-2*np.pi, 2*np.pi, 1000), 'PlayerCommand', defuzzify_method='centroid')
 
         # Accumulation (accumulation_method) methods for fuzzy variables:
         #    np.fmax
         #    np.multiply
         Pcommand.accumulation_method = np.fmax
-        #for i in range (3):
-        #    rayon['μ_'+str(i)]=fuzz.trimf(rayon.universe, [i*self.minR, (i+1)*self.minR, (i+2)*self.minR])
+
+        rayon["μ_0"] =fuzz.trapmf(rayon.universe,[minR,minR,minR + (minR_radius-minR)/2,minR_radius])
+        rayon["μ_1"] = fuzz.trimf(rayon.universe, [minR_radius,minR_radius+(max_R-minR_radius)/2 ,max_R])
+        rayon["μ_2"] =fuzz.trapmf(rayon.universe,[minR_radius+(max_R-minR_radius)/2 ,max_R,2*max_R,2*max_R])
 
         self.create_membership_function(angle, np.pi/2, n_function=3)
         self.create_membership_function(Pcommand, np.pi/2, n_function=3, saturation=False)
-
-
 
 
         rules = []
@@ -160,24 +163,24 @@ class FuzzPlayer:
 
 
 if __name__ == '__main__':
-
+    SHOW_VARIABLE=True
     setCorrectCHWD()
     map_file_name = 'assets/test_Map'
     theAPP = App_2(map_file_name)
+    # On init is called in on_execute !!!!
+    theAPP.on_init()
 
 
-    '''fuzz_ctrl_x=FuzzPlayer(theAPP.maze.tile_size_x)
-    fuzz_ctrl_y=FuzzPlayer(theAPP.maze.tile_size_y)
-    fuzz_ctrl_x.createFuzzyController()
-    fuzz_ctrl_y.createFuzzyController()'''
+    tile_size=(theAPP.maze.tile_size_y, theAPP.maze.tile_size_y)
 
-    fuzz_ctrl = FuzzPlayer(theAPP.maze.tile_size_x,theAPP.player.get_size())
-    fuzz_ctrl.test_fuzzy_angles()
-    """fuzz_ctrl=fuzz_ctrl.test_fuzzy_angles()
-    for var in fuzz_ctrl.ctrl.fuzzy_variables:
-         var.view()
-    plt.show()"""
+    fuzz_ctrl = FuzzPlayer()
+    fuzz_ctrl.set_fuzzy_angles_sim(tile_size,theAPP.player.get_size())
+    if SHOW_VARIABLE :
+        for var in fuzz_ctrl.sim.ctrl.fuzzy_variables:
+             var.view()
+        plt.show()
+
     theAPP.setIA_controller_angles(fuzz_ctrl.getOutputFromAngles)
     #theAPP.setIA_controller(fuzz_ctrl_x.getOutput,fuzz_ctrl_y.getOutput)
 
-    theAPP.on_execute()
+    #theAPP.on_execute()

@@ -34,6 +34,7 @@ class PrologCom:
 
     def __init__(self,maze):
         self.maze=maze
+        self.existing_type=set()
         self.mqi=PrologMQI()
         self.prolog_thread=self.mqi.create_thread()
         self.prolog_thread.query("[{}]".format(self.create_prolog_file(maze)))
@@ -47,6 +48,8 @@ class PrologCom:
         for i in range(len(maze)):
             for j in range(len(maze[i])):
                 current=maze[i][j]
+                current_type=prolog_dict[current]
+                self.existing_type .add(current_type)
                 prolog_file.write('{}({},{}).\t\t'.format(prolog_dict[current],i,j))
             prolog_file.write('\n')
         prolog_file.write(adjacent_rule)
@@ -86,12 +89,11 @@ class PrologCom:
 
     def GetType(self,coord_case=(0,1)):
         coord_case = str(coord_case)
-        for key in prolog_dict:
+        for key in self.existing_type:
             # print(self.prolog_thread.query(type+ '(1,13).'))
-            TypetoTest=prolog_dict[key]
-            type_case_test = self.prolog_thread.query(TypetoTest+coord_case + ".")
+            type_case_test = self.prolog_thread.query(key+coord_case + ".")
             if type_case_test:
-                return TypetoTest
+                return key
 
 
 if __name__ == '__main__':

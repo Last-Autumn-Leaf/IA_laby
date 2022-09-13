@@ -16,6 +16,8 @@ class App_2 (App):
         self.Fx=0
         self.Fy=0
         self.vectors_to_show=[]
+        self.path_to_show=None
+        self.goalTypes=['exit']
         self.old_pos=(0,0)
         self.new_pos=(0,0)
         self.old_theta_prime=0
@@ -32,24 +34,34 @@ class App_2 (App):
         display_surf=self._display_surf
         tile_size_x = self.maze.tile_size_x
         tile_size_y = self.maze.tile_size_y
-        for coord in self.visited_cases :
-            i=coord[0]
-            j=coord[1]
-            #pygame.draw.rect(display_surf, GREEN,(j * tile_size_x, i * tile_size_y, tile_size_x, tile_size_y))
-            draw_rect_alpha(display_surf, color, (j * tile_size_x, i * tile_size_y, tile_size_x, tile_size_y))
+        if self.path_to_show is not None :
+            for coord in self.path_to_show( self.getPlayerCoord(),self.goalTypes ) :
+                i=coord[0]
+                j=coord[1]
+                #pygame.draw.rect(display_surf, GREEN,(j * tile_size_x, i * tile_size_y, tile_size_x, tile_size_y))
+                draw_rect_alpha(display_surf, color, (j * tile_size_x, i * tile_size_y, tile_size_x, tile_size_y))
         player_pos=(self.player.x +int(self.player.size_x/2), self.player.y+int(self.player.size_y/2))
         for (x,y) in self.vectors_to_show :
             pygame.draw.line(display_surf, WHITE, player_pos,
                          (x,y))
-
 
         pygame.draw.rect(display_surf,GREEN,(self.player.x,self.player.y, self.player.size_x,self.player.size_y),width=3)
         # draw dmin not usefull
         #pygame.draw.circle(display_surf,GREEN,player_pos,self.dmin,width=3)
         #Draw current dirrection
         pygame.draw.line(display_surf, GREEN, player_pos,(self.player.x +20*self.Fx, self.player.y+20*self.Fy))
-    def set_visited(self,v):
-        self.visited_cases=v
+    def getPlayerCoord(self):
+        # coordonates are reversed !!!
+        y,x = self.player.get_position()
+        x=int(x / self.maze.tile_size_x)
+        y=int(y / self.maze.tile_size_y)
+        return (x,y)
+
+
+    def setShowPathFun(self,getPathFun):
+        self.path_to_show=getPathFun
+    def setGoalTypes(self,goalTypes):
+        self.goalTypes=goalTypes
 
     def setIA_controller(self,controllerXfun,controllerYfun):
         self.IA_controller_X=controllerXfun
@@ -111,9 +123,9 @@ class App_2 (App):
     def on_execute(self):
         self.on_init()
 
-
-        x,y=self.player.get_size()
-        self.dmin=np.sqrt(x**2 +y**2 )
+        #compute dmin
+        x, y = self.player.get_size()
+        self.dmin = np.sqrt(x ** 2 + y ** 2)
 
         while self._running:
             self._clock.tick(GAME_CLOCK)
