@@ -35,7 +35,7 @@ class App:
         self.maze.make_maze_wall_list()
         self.maze.make_maze_item_lists()
         self._image_surf = pygame.image.load("assets/kickboxeuse.png")
-        self.player.set_position(1.5 * self.maze.tile_size_x, 0.5 * self.maze.tile_size_y)
+        self.player.set_position(self.maze.start[0], self.maze.start[1])
         self.player.set_size(PLAYER_SIZE*self.maze.tile_size_x, PLAYER_SIZE*self.maze.tile_size_x)
         self._image_surf = pygame.transform.scale(self._image_surf, self.player.get_size())
         self._block_surf = pygame.image.load("assets/wall.png")

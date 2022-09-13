@@ -6,8 +6,9 @@ from IA_controller.Helper_fun import setCorrectCHWD, getMonsterCoord
 from IA_controller.visualizer import App_2
 from Player import Player
 import random
-POP_SIZE = 500
-create_random_attribute = lambda: [random.randrange(1, MAX_ATTRIBUTE) for i in range(NUM_ATTRIBUTES)]
+POP_SIZE = 3
+
+create_random_attribute = lambda: [random.randrange(-MAX_ATTRIBUTE, MAX_ATTRIBUTE) for i in range(NUM_ATTRIBUTES)]
 
 class MonsterOrganizer:
     mask=str(2+ math.ceil( math.log2(MAX_ATTRIBUTE) ))
@@ -19,7 +20,7 @@ class MonsterOrganizer:
         self.b_val = np.zeros_like(self.d_val,dtype=object)
         self.f_val=np.zeros((POP_SIZE,2))
         self.crossover_prob=0.9
-        self.mutation_prob=0.1
+        self.mutation_prob=0.01
         self.encode()
         self.beatten=False
         self.dummy=Player()
@@ -32,15 +33,6 @@ class MonsterOrganizer:
         self.mean_evolution=[]
         self.crossOverFunction =self.uniform_crossOver
 
-    mse = lambda self,x,y : 1/( (x-y)**2 +1)
-    GOAL = [MAX_ATTRIBUTE for x in range(12)]
-    def test_Fitness_fun(self,dummy):
-        score=0
-        for x,y in zip(dummy.attributes,self.GOAL) :
-            score += self.mse(x,y)
-        return score
-
-
     def eval_fit(self):
         self.F_sum=0
         if not self.beatten :
@@ -48,7 +40,6 @@ class MonsterOrganizer:
             for i,attr in enumerate(self.d_val) :
                 self.dummy.attributes=attr
                 R,F=self.monsterObject.mock_fight(self.dummy)
-                #R,F=0,self.test_Fitness_fun(self.dummy)
                 self.f_val[i]=np.array((R,F))
                 self.F_sum +=F
                 self.max_F=max(self.max_F,F)
@@ -56,9 +47,9 @@ class MonsterOrganizer:
                 if R==4 :
                     self.beatten=True
                     self.d_val=attr
-                    print("Attribute found")
+                    print("Attribute found at p[{}]".format(i))
                     break
-            self.mean_F /=i
+            self.mean_F /=i if i !=0 else F
             self.mean_evolution.append(self.mean_F)
             self.evolution.append(self.max_F)
 
@@ -141,16 +132,17 @@ class MonsterOrganizer:
     def doMutation(self):
         for i,individu in enumerate( self.b_val ): # population
             for j,chromosome in enumerate(individu) : # individu
-                chromosome=list(chromosome)[2:]
+                sign= '-' if chromosome [0]== '-' else ''
+                chromosome=list(chromosome)[2 if not sign else 3:]
 
-                if random.random() < self.mutation_prob :
-                    '''# mutate only one bit
+                '''if random.random() < self.mutation_prob :
+                    # mutate only one bit
                     bit_selected = random.randint(0, len(chromosome) - 1)
                     chromosome[bit_selected] =str(int(chromosome[bit_selected])^1)'''
 
                 for k,bit in enumerate(chromosome) : # every bit as a probability of pm to mutate
                     chromosome[k] =str(int(bit)^1) if random.random()< self.mutation_prob else bit
-                self.b_val[i, j]=''.join(chromosome) #'0b'+''.join(chromosome)
+                self.b_val[i, j]=sign+''.join(chromosome) #'0b'+''.join(chromosome)
     def new_gen(self):
         if not self.beatten:
             self.encode()
@@ -169,7 +161,7 @@ class MonsterOrganizer:
             return self.d_val
         return self.d_val[item]
     def __repr__(self):
-        return f"Monster at {self.pos},maxF={self.max_F} ,attributeFound?={self.beatten}"
+        return f"Monster at {self.pos},maxF={self.max_F},attributeFound?={self.beatten},gen={self.currentGen}"
 
     def __bool__(self):
         return self.beatten
@@ -178,6 +170,7 @@ class MonsterOrganizer:
     def test_attributes(self,attr):
         self.dummy.attributes=attr
         return self.monsterObject.mock_fight(self.dummy)
+
 class genetic_trainer:
     def __init__(self,monsterList,monsterCoord):
         self.monster_list=[ MonsterOrganizer(m,pos) for m,pos in zip(monsterList,monsterCoord)]
@@ -185,42 +178,26 @@ class genetic_trainer:
     def test(self):
 
         for i,mob in enumerate(self.monster_list ):
-            for j in range(500) :
+            for j in range(100) :
                 mob.do_step()
                 mob.new_gen()
-            plt.plot(mob.evolution)
-            plt.plot(mob.mean_evolution)
+            plt.plot(mob.evolution,label='max F')
+            plt.plot(mob.mean_evolution,label='mean F')
+            plt.legend()
             print(mob)
-        plt.show()
+            plt.show()
 
-    def test_2(self):
-
-        def new_indices(a,indexes):
-            b=[0] * len(a)
-
-            for i in range(len(indexes)) :
-                b[i]=indexes[i]
-            return b
-
-        mob =self.monster_list[0]
-        mob_attributes=mob.monsterObject.attributes
-        print(mob.test_attributes(mob_attributes))
-        mob_attributes=new_indices(mob_attributes,mob.monsterObject._Monster__my_index_list)
-        print(mob.test_attributes(mob_attributes))
-        mob_attributes=new_indices(mob_attributes,mob.monsterObject._Monster__player_index_list)
-
-        print(mob.test_attributes(mob_attributes))
 
 
 if __name__ == '__main__':
-    random.seed(0)
-    np.random.seed(0)
+    #random.seed(0)
+    #np.random.seed(0)
     setCorrectCHWD()
     map_file_name='assets/test_Map'
     theAPP = App_2(map_file_name)
     theAPP.on_init()
     GT=genetic_trainer(theAPP.maze.monsterList,getMonsterCoord(theAPP.maze.maze))
-    GT.test_2()
+    GT.test()
 
 
 

@@ -43,7 +43,9 @@ class App_2 (App):
 
 
         pygame.draw.rect(display_surf,GREEN,(self.player.x,self.player.y, self.player.size_x,self.player.size_y),width=3)
-        pygame.draw.circle(display_surf,GREEN,player_pos,self.dmin,width=3)
+        # draw dmin not usefull
+        #pygame.draw.circle(display_surf,GREEN,player_pos,self.dmin,width=3)
+        #Draw current dirrection
         pygame.draw.line(display_surf, GREEN, player_pos,(self.player.x +20*self.Fx, self.player.y+20*self.Fy))
     def set_visited(self,v):
         self.visited_cases=v
@@ -79,14 +81,24 @@ class App_2 (App):
 
         return x,y
     def doForce_Y(self,force):
-        for i in range(abs(int(force ))):
+        if force <0 :
+            force =np.floor(force)
+        else :
+            force=np.ceil(force)
+        force=int(force)
+        for i in range(abs(force )):
 
             if force > 0:
                 self.on_AI_input('DOWN')
             else:
                 self.on_AI_input('UP')
     def doForce_X(self,force):
-        for i in range(abs(int(force ))):
+        if force <0 :
+            force = np.floor(force)
+        else :
+            force= np.ceil(force)
+        force=int(force)
+        for i in range(abs(force )):
             if force > 0:
                 self.on_AI_input('RIGHT')
             else:
@@ -190,7 +202,7 @@ class App_2 (App):
                 thethaG -= theta_prime
                 self.old_theta_prime=theta_prime
                 self.old_pos=self.player.get_position()
-                R = 5
+                R = 10
                 self.Fx, self.Fy = self.Polar2Cart(R, thethaG)
                 self.doForce_X(self.Fx)
                 self.doForce_Y(self.Fy)
