@@ -7,8 +7,6 @@ from IA_controller.visualizer import App_2
 
 
 
-
-
 class Plannificator:
     def getGoalFun(self,goal_type=['coin', 'treasure']):
         if type(goal_type) == list:
@@ -50,7 +48,7 @@ if __name__ == '__main__':
     maze=theAPP.maze.maze
     plannificator = Plannificator(PrologCom(maze))
 
-    theAPP.setGoalTypes('coin')
+    theAPP.setGoalTypes(['coin','treasure'])
     theAPP.setShowPathFun(plannificator.naivePlanification)
 
     theAPP.on_execute()

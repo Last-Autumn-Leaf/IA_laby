@@ -17,30 +17,25 @@ class App_2 (App):
         self.Fy=0
         self.vectors_to_show=[]
         self.path_to_show=None
+        self.path_to_render = None
         self.goalTypes=['exit']
         self.old_pos=(0,0)
         self.new_pos=(0,0)
         self.old_theta_prime=0
         self.FOLLOW_MOUSE=False
         self.on_init()
+        self.current_player_case = self.getPlayerCoord()
 
 
     def on_render(self):
         self.maze_render()
-        self.color_visited()
+        self.color_test()
+        self.color_render()
         self._display_surf.blit(self._image_surf, (self.player.x, self.player.y))
         pygame.display.flip()
 
-    def color_visited(self,color=(0,255,0,70)):
+    def color_render(self,color=(0,255,0,70)):
         display_surf=self._display_surf
-        tile_size_x = self.maze.tile_size_x
-        tile_size_y = self.maze.tile_size_y
-        if self.path_to_show is not None :
-            for coord in self.path_to_show( self.getPlayerCoord(),self.goalTypes ) :
-                i=coord[0]
-                j=coord[1]
-                #pygame.draw.rect(display_surf, GREEN,(j * tile_size_x, i * tile_size_y, tile_size_x, tile_size_y))
-                draw_rect_alpha(display_surf, color, (j * tile_size_x, i * tile_size_y, tile_size_x, tile_size_y))
         player_pos=(self.player.x +int(self.player.size_x/2), self.player.y+int(self.player.size_y/2))
         for (x,y) in self.vectors_to_show :
             pygame.draw.line(display_surf, WHITE, player_pos,
@@ -51,6 +46,18 @@ class App_2 (App):
         #pygame.draw.circle(display_surf,GREEN,player_pos,self.dmin,width=3)
         #Draw current dirrection
         pygame.draw.line(display_surf, GREEN, player_pos,(self.player.x +20*self.Fx, self.player.y+20*self.Fy))
+
+    def color_test(self,color=(0,255,0,70)):
+        display_surf = self._display_surf
+        tile_size_x = self.maze.tile_size_x
+        tile_size_y = self.maze.tile_size_y
+        if self.path_to_render is not None :
+            for coord in self.path_to_render:
+                i=coord[0]
+                j=coord[1]
+                #pygame.draw.rect(display_surf, GREEN,(j * tile_size_x, i * tile_size_y, tile_size_x, tile_size_y))
+                draw_rect_alpha(display_surf, color, (j * tile_size_x, i * tile_size_y, tile_size_x, tile_size_y))
+
     def getPlayerCoord(self):
         # coordonates are reversed !!!
         y,x = self.player.get_position()
@@ -120,7 +127,13 @@ class App_2 (App):
 
     getVitesse = lambda self : np.sqrt((self.new_pos[0]-self.old_pos[0])**2+ (self.new_pos[1]-self.old_pos[1])**2)
 
+    def ChangeCaseDetector(self):
 
+        if self.current_player_case != self.getPlayerCoord():
+            self.current_player_case = self.getPlayerCoord()
+            return True
+        else:
+            return False
     def on_execute(self):
 
         #compute dmin
@@ -239,6 +252,10 @@ class App_2 (App):
             if self.on_exit():
                 self._running = False
                 self._win = True
+
+            if self.ChangeCaseDetector():
+                self.path_to_render = self.path_to_show(self.getPlayerCoord(),self.goalTypes)
+                self.color_test()
             self.on_render()
 
         while self._win:
