@@ -9,8 +9,11 @@ import matplotlib.pyplot as plt
 
 class FuzzPlayer:
     membership_naming = "μ_"
-    def __init__(self,tile_size):
+    def __init__(self,tile_size,player_size):
         self.tile_size=tile_size
+        self.px,self.py=player_size
+        self.minR = np.sqrt((self.px / 2) ** 2 + (self.py / 2) ** 2)
+
 
     def create_membership_function(self,ctrl_ant, value, name=membership_naming, n_function=5, saturation=True):
         assert (n_function >= 1)
@@ -52,9 +55,9 @@ class FuzzPlayer:
         #    'mom'     : mean of maximum
         #    'som'     : min of maximum
         #    'lom'     : max of maximum
-        self.tile_size = 100
-        DtoGoal = ctrl.Antecedent(np.linspace(-2 * self.tile_size, 2 * self.tile_size, 1000), 'DtoGoal')
-        DtoObst = ctrl.Antecedent(np.linspace(-2 * self.tile_size, 2 * self.tile_size, 1000), 'DtoObstacle')
+
+        RtoGoal = ctrl.Antecedent(np.linspace(0, 2 * self.tile_size, 1000), 'RtoGoal')
+        RtoObst = ctrl.Antecedent(np.linspace(0, 2 * self.tile_size, 1000), 'RtoObstacle')
         Pcommand = ctrl.Consequent(np.linspace(-100, 100, 1000), 'PlayerCommand', defuzzify_method='centroid')
 
         # Accumulation (accumulation_method) methods for fuzzy variables:
@@ -62,8 +65,8 @@ class FuzzPlayer:
         #    np.multiply
         Pcommand.accumulation_method = np.fmax
 
-        self.create_membership_function(DtoGoal, self.tile_size, n_function=3)
-        self.create_membership_function(DtoObst, self.tile_size*20, n_function=3)
+        self.create_membership_function(RtoGoal, self.tile_size, n_function=3)
+        self.create_membership_function(RtoObst, self.tile_size, n_function=3)
         self.create_membership_function(Pcommand, 5, n_function=3, saturation=False)
 
         '''DtoGoal['neg'] = fuzz.trapmf(DtoGoal.universe, [-0.25, -0.25, -0.1, -0.05])
@@ -82,11 +85,8 @@ class FuzzPlayer:
                         [2, 1, 0],
                         [2, 2, 1]]
 
-        # RULES_MATRIX = [[1, 2, 2],
-        #                 [0, 1, 2],
-        #                 [0, 0, 1]]
 
-        rules = self.create_rule(RULES_MATRIX, DtoGoal, DtoObst, Pcommand)
+        rules = self.create_rule(RULES_MATRIX, RtoGoal, RtoObst, Pcommand)
         '''rules.append(ctrl.Rule(antecedent=(DtoGoal['neg'] & DtoObst['neg']), consequent=Pcommand['zero']))
         rules.append(ctrl.Rule(antecedent=(DtoGoal['neg'] & DtoObst['pos']), consequent=Pcommand['neg']))
         rules.append(ctrl.Rule(antecedent=(DtoGoal['neg'] & DtoObst['zero']), consequent=Pcommand['neg']))
@@ -108,44 +108,76 @@ class FuzzPlayer:
         return self.sim
 
     def getOutput(self,input1,input2):
-        self.sim.input['DtoGoal'] = input1
-        self.sim.input['DtoObstacle'] = input2
+        self.sim.input['RtoGoal'] = input1
+        self.sim.input['RtoObstacle'] = input2
         self.sim.compute()
 
         force = self.sim.output['PlayerCommand']
 
         return force
 
+    def getOutputFromAngles(self,input):
+        self.sim.input['angle'] = input
+        self.sim.compute()
+
+        angle = self.sim.output['PlayerCommand']
+
+        return angle
+
+    def test_fuzzy_angles(self):
+        angle = ctrl.Antecedent(np.linspace(-np.pi, np.pi, 1000), 'angle')
+        rayon = ctrl.Antecedent(np.linspace(0, 3*self.minR, 1000), 'rayon')
+        Pcommand = ctrl.Consequent(np.linspace(-2*np.pi, 2*np.pi, 1000), 'PlayerCommand', defuzzify_method='centroid')
+
+        # Accumulation (accumulation_method) methods for fuzzy variables:
+        #    np.fmax
+        #    np.multiply
+        Pcommand.accumulation_method = np.fmax
+        for i in range (3):
+            rayon['μ_'+str(i)]=fuzz.trimf(rayon.universe, [i*self.minR, (i+1)*self.minR, (i+2)*self.minR])
+
+        self.create_membership_function(angle, np.pi/2, n_function=3)
+        self.create_membership_function(Pcommand, np.pi/2, n_function=3, saturation=False)
+
+
+
+
+        rules = []
+        rules.append(ctrl.Rule(antecedent=(angle["μ_0"] ), consequent=Pcommand["μ_1"]))
+        rules.append(ctrl.Rule(antecedent=(angle["μ_2"] ), consequent=Pcommand["μ_1"]))
+        rules.append(ctrl.Rule(antecedent=(angle["μ_0"] & angle["μ_1"]) , consequent=Pcommand["μ_0"]))
+        rules.append(ctrl.Rule(antecedent=(angle["μ_2"] & angle["μ_1"]) , consequent=Pcommand["μ_2"]))
+
+        for rule in rules:
+            rule.and_func = np.fmin
+            rule.or_func = np.fmax
+
+        system = ctrl.ControlSystem(rules)
+        self.sim = ctrl.ControlSystemSimulation(system)
+        return self.sim
+
+
+
+
 if __name__ == '__main__':
-
-    # Display fuzzy variables
-    '''for var in fuzz_ctrl.ctrl.fuzzy_variables:
-        var.view()
-    plt.show()'''
-
-
-    #TODO definir une action initiale cohérente
-
 
     setCorrectCHWD()
     map_file_name = 'assets/test_Map'
     theAPP = App_2(map_file_name)
 
 
-    fuzz_ctrl_x=FuzzPlayer(theAPP.maze.tile_size_x)
+    '''fuzz_ctrl_x=FuzzPlayer(theAPP.maze.tile_size_x)
     fuzz_ctrl_y=FuzzPlayer(theAPP.maze.tile_size_y)
     fuzz_ctrl_x.createFuzzyController()
-    fuzz_ctrl_y.createFuzzyController()
+    fuzz_ctrl_y.createFuzzyController()'''
 
-    # for var in fuzz_ctrl_x.createFuzzyController().ctrl.fuzzy_variables:
-    #     var.view()
-    # plt.show()
-    #
-    # for var in fuzz_ctrl_x.createFuzzyController().ctrl.fuzzy_variables:
-    #     var.view()
-    # plt.show()
-
-
-    theAPP.setIA_controller(fuzz_ctrl_x.getOutput,fuzz_ctrl_y.getOutput)
+    fuzz_ctrl = FuzzPlayer(theAPP.maze.tile_size_x,theAPP.player.get_size())
+    fuzz_ctrl.test_fuzzy_angles()
+    """fuzz_ctrl=fuzz_ctrl.test_fuzzy_angles()
+    for var in fuzz_ctrl.ctrl.fuzzy_variables:
+         var.view()
+    plt.show()"""
+    theAPP.setIA_controller_angles(fuzz_ctrl.getOutputFromAngles)
+    #theAPP.setIA_controller(fuzz_ctrl_x.getOutput,fuzz_ctrl_y.getOutput)
 
     theAPP.on_execute()

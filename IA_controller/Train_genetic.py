@@ -6,7 +6,7 @@ from IA_controller.Helper_fun import setCorrectCHWD, getMonsterCoord
 from IA_controller.visualizer import App_2
 from Player import Player
 import random
-POP_SIZE = 100
+POP_SIZE = 500
 create_random_attribute = lambda: [random.randrange(1, MAX_ATTRIBUTE) for i in range(NUM_ATTRIBUTES)]
 
 class MonsterOrganizer:
@@ -19,7 +19,7 @@ class MonsterOrganizer:
         self.b_val = np.zeros_like(self.d_val,dtype=object)
         self.f_val=np.zeros((POP_SIZE,2))
         self.crossover_prob=0.9
-        self.mutation_prob=0.01
+        self.mutation_prob=0.1
         self.encode()
         self.beatten=False
         self.dummy=Player()
@@ -30,16 +30,15 @@ class MonsterOrganizer:
         # For testing
         self.evolution=[]
         self.mean_evolution=[]
-        self.crossOverFunction =self.randomPointCrossOver
+        self.crossOverFunction =self.uniform_crossOver
 
     mse = lambda self,x,y : 1/( (x-y)**2 +1)
-    GOAL = [1000 for x in range(12)]
+    GOAL = [MAX_ATTRIBUTE for x in range(12)]
     def test_Fitness_fun(self,dummy):
         score=0
         for x,y in zip(dummy.attributes,self.GOAL) :
             score += self.mse(x,y)
         return score
-
 
 
     def eval_fit(self):
@@ -48,9 +47,8 @@ class MonsterOrganizer:
             self.mean_F=0
             for i,attr in enumerate(self.d_val) :
                 self.dummy.attributes=attr
-                #R,F=self.monsterObject.mock_fight(self.dummy)
-                R=0
-                F=self.test_Fitness_fun(self.dummy)
+                R,F=self.monsterObject.mock_fight(self.dummy)
+                #R,F=0,self.test_Fitness_fun(self.dummy)
                 self.f_val[i]=np.array((R,F))
                 self.F_sum +=F
                 self.max_F=max(self.max_F,F)
@@ -109,22 +107,23 @@ class MonsterOrganizer:
         cop = random.randint(1, len(p1) - 2) # random cross-Over Point
         return np.concatenate((p1[:cop], p2[cop:])),np.concatenate((p2[:cop], p1[cop:]))
 
-    def uniformCrossover(self,p1,p2):
-        def uniformSelection(p1,p2):
-            child=''
-            for i in range(0,len(p1)):
+    def uniform_crossOver(self,p1,p2):
+        def uniformSelection():
+            child=np.zeros_like(p1)
+            for i in range(NUM_ATTRIBUTES):
                 if random.random() < 0.5:
-                    child += p1[i]
+                    child [i]= p1[i]
                 else:
-                    child += p2[i]
-                return child
+                    child [i]= p2[i]
+            return child
 
-        return uniformSelection(p1,p2),uniformSelection(p1,p2)
+        indexes =[i for i in range(NUM_ATTRIBUTES)]
+        random.shuffle(indexes)
+        p1 = p1[indexes]
+        random.shuffle(indexes)
+        p2 = p2[indexes]
 
-
-    def test_crossOver(self,p1,p2):
-        cop = random.randrange(1, len(p1) - 2) # random cross-Over Point
-        return np.concatenate((p1[:cop], p2[cop:])),np.concatenate((p2[:cop], p1[cop:]))
+        return uniformSelection(),uniformSelection()
 
     def doCrossOver(self,pairs):
         halfpop1 = pairs[0]
@@ -143,13 +142,14 @@ class MonsterOrganizer:
         for i,individu in enumerate( self.b_val ): # population
             for j,chromosome in enumerate(individu) : # individu
                 chromosome=list(chromosome)[2:]
-                if random.random() < self.mutation_prob :
-                    # mutate only one bit
-                    bit_selected = random.randint(0, len(chromosome) - 1)
-                    chromosome[bit_selected] =str(int(chromosome[bit_selected])^1)
 
-                #for k,bit in enumerate(chromosome) : # every bit as a probability of pm to mutate
-                #    chromosome[k] =str(int(bit)^1) if random.random()< self.mutation_prob else bit
+                if random.random() < self.mutation_prob :
+                    '''# mutate only one bit
+                    bit_selected = random.randint(0, len(chromosome) - 1)
+                    chromosome[bit_selected] =str(int(chromosome[bit_selected])^1)'''
+
+                for k,bit in enumerate(chromosome) : # every bit as a probability of pm to mutate
+                    chromosome[k] =str(int(bit)^1) if random.random()< self.mutation_prob else bit
                 self.b_val[i, j]=''.join(chromosome) #'0b'+''.join(chromosome)
     def new_gen(self):
         if not self.beatten:
@@ -174,19 +174,18 @@ class MonsterOrganizer:
     def __bool__(self):
         return self.beatten
 
+
+    def test_attributes(self,attr):
+        self.dummy.attributes=attr
+        return self.monsterObject.mock_fight(self.dummy)
 class genetic_trainer:
     def __init__(self,monsterList,monsterCoord):
         self.monster_list=[ MonsterOrganizer(m,pos) for m,pos in zip(monsterList,monsterCoord)]
 
-
-        # goes to the next generation
-        # From 50% of fittest population, Individuals
-        # will mate to produce offspring
-
     def test(self):
 
         for i,mob in enumerate(self.monster_list ):
-            for j in range(50) :
+            for j in range(500) :
                 mob.do_step()
                 mob.new_gen()
             plt.plot(mob.evolution)
@@ -194,17 +193,34 @@ class genetic_trainer:
             print(mob)
         plt.show()
 
+    def test_2(self):
 
+        def new_indices(a,indexes):
+            b=[0] * len(a)
+
+            for i in range(len(indexes)) :
+                b[i]=indexes[i]
+            return b
+
+        mob =self.monster_list[0]
+        mob_attributes=mob.monsterObject.attributes
+        print(mob.test_attributes(mob_attributes))
+        mob_attributes=new_indices(mob_attributes,mob.monsterObject._Monster__my_index_list)
+        print(mob.test_attributes(mob_attributes))
+        mob_attributes=new_indices(mob_attributes,mob.monsterObject._Monster__player_index_list)
+
+        print(mob.test_attributes(mob_attributes))
 
 
 if __name__ == '__main__':
     random.seed(0)
+    np.random.seed(0)
     setCorrectCHWD()
     map_file_name='assets/test_Map'
     theAPP = App_2(map_file_name)
     theAPP.on_init()
     GT=genetic_trainer(theAPP.maze.monsterList,getMonsterCoord(theAPP.maze.maze))
-    GT.test()
+    GT.test_2()
 
 
 
