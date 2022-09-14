@@ -178,6 +178,14 @@ class App_2 (App):
     def on_execute(self):
 
         #self.path_to_cross = self.path_to_show(self.getPlayerCoord(), self.goalTypes)
+        def fix_angle(a):
+            if a >=np.pi :
+                a-= 2*np.pi
+            elif a<-np.pi :
+                a+= 2*np.pi
+            return a
+
+
 
         while self._running:
             self._clock.tick(GAME_CLOCK)
@@ -270,7 +278,8 @@ class App_2 (App):
 
                     rO=self.getSmallest_distance_rects(oObject,self.player.get_rect())
 
-                    theta_prime=self.IA_controller_angle(thethaO-thethaG,rO)
+                    theta=fix_angle(thethaO-thethaG)
+                    theta_prime=self.IA_controller_angle(theta,rO)
 
                     alldev.append(theta_prime)
 
