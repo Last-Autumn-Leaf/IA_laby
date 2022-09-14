@@ -1,7 +1,7 @@
 import numpy as np
 import pygame
 
-from Constants import GAME_CLOCK, WHITE, GREEN, BLUE
+from Constants import GAME_CLOCK, WHITE, GREEN, BLUE, PERCEPTION_RADIUS
 from Games2D import App
 from IA_controller.Helper_fun import draw_rect_alpha
 
@@ -136,6 +136,24 @@ class App_2 (App):
             return True
         else:
             return False
+
+
+    def getSmallest_distance_rects(self,rect1,rect2):
+        if rect1 is None :
+            return PERCEPTION_RADIUS * self.getRadius((self.maze.tile_size_x,self.maze.tile_size_y))
+        X =  (rect1.top -rect2.top,rect1.top -rect2.bottom,
+                 rect1.bottom -rect2.top,rect1.bottom -rect2.bottom)
+        X =[ abs(dx) for dx in X]
+        X=min(X)
+        Y =  (rect1.right -rect2.right,rect1.right -rect2.left,
+                 rect1.left -rect2.right,rect1.left -rect2.left)
+        Y = [abs(dy) for dy in Y]
+        Y=min(Y)
+
+        return np.sqrt(  X**2 + Y**2 )
+
+
+
     def on_execute(self):
 
         #self.path_to_cross = self.path_to_show(self.getPlayerCoord(), self.goalTypes)
@@ -211,27 +229,31 @@ class App_2 (App):
                     gx = goal.centerx
 
                 self.vectors_to_show.append((gx,gy))
-                gx-= self.player.x
-                gy-= self.player.y
+                player_pos=self.player.get_rect().center
+                gx-= player_pos[0]
+                gy-= player_pos[1]
                 theta_prime=0.0
                 moy=0.0
                 rG, thethaG = self.cart2Polar(gx, gy)
 
                 if not allObs :
-                    allObs.append((-gx,-gy,0))
+                    allObs.append((-gx,-gy,None))
+                alldev=[]
                 for (ox,oy,oObject) in allObs :
                     self.vectors_to_show.append((ox,oy))
-                    ox-= self.player.x
-                    oy-= self.player.y
-
+                    #vecteur obstacle joueur
+                    ox-= player_pos[0]
+                    oy-= player_pos[1]
                     rO, thethaO = self.cart2Polar(ox, oy)
-                    rO -=orad +self.dmin
-                    #if rO <= 0 :
-                    theta_prime+=self.IA_controller_angle(thethaO-thethaG,rO)
-                    moy+=1
 
-                theta_prime =theta_prime / moy if moy !=0 else 0
-                thethaG -= theta_prime
+                    rO=self.getSmallest_distance_rects(oObject,self.player.get_rect())
+
+                    theta_prime=self.IA_controller_angle(thethaO-thethaG,rO)
+
+                    alldev.append(theta_prime)
+
+                theta_prime =np.max(alldev)
+                thethaG += theta_prime
 
                 R = 2
                 self.Fx, self.Fy = self.Polar2Cart(R, thethaG)
@@ -264,7 +286,7 @@ class App_2 (App):
                 self.path_to_cross = self.path_to_show(self.getPlayerCoord(), self.goalTypes)
                 self.color_test()'''
             self.on_render()
-            pygame.time.wait(100)
+            #pygame.time.wait(100)
 
         while self._win:
             for event in pygame.event.get():

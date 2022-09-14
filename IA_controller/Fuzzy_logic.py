@@ -148,9 +148,9 @@ class FuzzPlayer:
         distance["P"] = fuzz.trapmf(distance.universe, [-2 * max_R, -2 * max_R, 0, max_R])
         distance["L"] = fuzz.trapmf(distance.universe, [0, max_R, 2 * max_R, 2 * max_R])
 
-        Pcommand["G"] = fuzz.trapmf(Pcommand.universe, [-np.pi, -np.pi, -np.pi / 4, 0])
+        Pcommand["G"] = fuzz.trimf(Pcommand.universe, [-np.pi/2, -np.pi/4, 0])
         Pcommand["C"] = fuzz.trimf(Pcommand.universe, [-np.pi/4, 0, np.pi/4])
-        Pcommand["D"] = fuzz.trapmf(Pcommand.universe, [0, np.pi / 4, np.pi, np.pi])
+        Pcommand["D"] = fuzz.trimf(Pcommand.universe, [0, np.pi / 4, np.pi/2])
 
 
         # self.create_membership_function(angle, np.pi/2, n_function=3)
