@@ -1,7 +1,7 @@
 import numpy as np
 import pygame
 
-from Constants import GAME_CLOCK, WHITE, GREEN, BLUE, PERCEPTION_RADIUS
+from Constants import GAME_CLOCK, WHITE, GREEN, PERCEPTION_RADIUS
 from Games2D import App
 from IA_controller.Helper_fun import draw_rect_alpha
 
@@ -9,97 +9,64 @@ from IA_controller.Helper_fun import draw_rect_alpha
 class App_2 (App):
     def __init__(self,mazefile):
         super().__init__(mazefile)
-        self.visited_cases=[]
-        self.IA_controller_X=None
-        self.IA_controller_Y=None
-        self.IA_controller_angle=None
+
+        self.FOLLOW_MOUSE=False
+
+        self.fuzz_ctrl=None
+        self.plannificatorFun=None
+        self.current_path = None
+
         self.Fx=0
         self.Fy=0
+
         self.vectors_to_show=[]
-        self.path_to_show=None
-        self.path_to_cross = None
         self.goalTypes=['coin','treasure','exit']
-        self.old_pos=(0,0)
-        self.new_pos=(0,0)
-        self.old_theta_prime=0
-        self.FOLLOW_MOUSE=False
         self.on_init()
         self.current_player_case = self.getPlayerCoord()
 
-
+    getRadius = lambda self, size: np.sqrt(size[0] ** 2 + size[1] ** 2)
     def on_render(self):
         self.maze_render()
-        self.color_test()
-        self.color_render()
+        self.draw_current_path()
+        self.draw_vectors()
         self._display_surf.blit(self._image_surf, (self.player.x, self.player.y))
         pygame.display.flip()
-
-    def color_render(self,color=(0,255,0,70)):
+    def draw_vectors(self):
         display_surf=self._display_surf
         player_pos=self.player.get_rect().center
         for (x,y) in self.vectors_to_show :
             pygame.draw.line(display_surf, WHITE, player_pos,
                          (x,y))
-
-        pygame.draw.rect(display_surf,GREEN,(self.player.x,self.player.y, self.player.size_x,self.player.size_y),width=3)
-        # draw dmin not usefull
-        #pygame.draw.circle(display_surf,GREEN,player_pos,self.dmin,width=3)
-        #Draw current dirrection
-        pygame.draw.line(display_surf, GREEN, player_pos,(player_pos[0] + int(50*self.Fx), player_pos[1] + int(50*self.Fy)))
-
-    def color_test(self,color=(0,255,0,70)):
+        # draw hitbox
+        pygame.draw.rect(display_surf,GREEN,(self.player.x,self.player.y, self.player.size_x,self.player.size_y),width=1)
+        #Draw Force Vector
+        pygame.draw.line(display_surf, GREEN, player_pos,(player_pos[0] + int(30*self.Fx), player_pos[1] + int(30*self.Fy)))
+    def draw_current_path(self,color=(0,255,0,70)):
         display_surf = self._display_surf
         tile_size_x = self.maze.tile_size_x
         tile_size_y = self.maze.tile_size_y
-        if self.path_to_cross is not None :
-            for coord in self.path_to_cross:
-                i=coord[0]
-                j=coord[1]
-                #pygame.draw.rect(display_surf, GREEN,(j * tile_size_x, i * tile_size_y, tile_size_x, tile_size_y))
-                draw_rect_alpha(display_surf, color, (j * tile_size_x, i * tile_size_y, tile_size_x, tile_size_y))
-
+        if self.current_path is not None :
+            for x,y in self.current_path:
+                draw_rect_alpha(display_surf, color, (x* tile_size_x, y * tile_size_y, tile_size_x, tile_size_y))
     def getPlayerCoord(self):
         # coordonates are reversed !!!
         x,y = self.player.get_rect().center
         x=int(x / self.maze.tile_size_x)
         y=int(y / self.maze.tile_size_y)
-        return (y,x)
-
-
-    def setShowPathFun(self,getPathFun):
-        self.path_to_show=getPathFun
+        return (x,y)
+    def setPlanFun(self,planFun):
+        self.plannificatorFun=planFun
     def setGoalTypes(self,goalTypes):
         self.goalTypes=goalTypes
-
-    def setIA_controller(self,controllerXfun,controllerYfun):
-        self.IA_controller_X=controllerXfun
-        self.IA_controller_Y=controllerYfun
-
-    getRadius = lambda self,size : np.sqrt(  size[0]**2 + size[1]**2  )
-    def setIA_controller_angles(self,controllerfun):
-        self.IA_controller_angle=controllerfun
-
-
-    def getVectors(self):
-        dG_y, dG_x, dO_y, dO_x=0,0,0,0
-        if self.maze.coinList :
-            dG_y = self.maze.coinList[0].centery - self.player.y
-            dG_x = self.maze.coinList[0].centerx - self.player.x
-        if self.maze.obstacleList :
-            dO_y = self.maze.obstacleList[0].centery - self.player.y
-            dO_x = self.maze.obstacleList[0].centerx - self.player.x
-
-        return dG_x,dG_y,dO_x,dO_y
-
+    def setFuzzCtrl(self,fuzz_ctrl):
+        self.fuzz_ctrl=fuzz_ctrl
     def cart2Polar(self,x,y):
         r=np.sqrt(x**2 +y**2)
         theta= np.arctan2(y,x)
         return r,theta
-
     def Polar2Cart(self,r,theta):
         x = r* np.cos(theta)
         y= r* np.sin(theta)
-
         return x,y
     def doForce_Y(self,force):
         if force <0 :
@@ -124,18 +91,13 @@ class App_2 (App):
                 self.on_AI_input('RIGHT')
             else:
                 self.on_AI_input('LEFT')
-
-    getVitesse = lambda self : np.sqrt((self.new_pos[0]-self.old_pos[0])**2+ (self.new_pos[1]-self.old_pos[1])**2)
-
     def ChangeCaseDetector(self):
-
-        if self.current_player_case != self.getPlayerCoord():
-            self.current_player_case = self.getPlayerCoord()
+        true_case=self.getPlayerCoord()
+        if self.current_player_case !=true_case :
+            self.current_player_case = true_case
             return True
         else:
             return False
-
-
     def getSmallest_distance_rects(self,rect1,rect2):
         dist = lambda p1,p2 : np.sqrt((p1[0]-p2[0])**2+ (p1[1]-p2[1])**2)
 
@@ -170,12 +132,9 @@ class App_2 (App):
         else:  # rectangles intersect
             return 0.
 
-
-
-
     def on_execute(self):
-
-        self.path_to_cross = self.path_to_show(self.getPlayerCoord(), self.goalTypes)
+        if self.plannificatorFun :
+            self.current_path = self.plannificatorFun(self.getPlayerCoord(), self.goalTypes)
         def fix_angle(a):
             if a >=np.pi :
                 a-= 2*np.pi
@@ -201,53 +160,45 @@ class App_2 (App):
             keys = pygame.key.get_pressed()
             self.on_keyboard_input(keys)
 
-            #
-            if self.IA_controller_X is not None:
-                gx= self.maze.coinList[0].centery - self.player.y
-                gy= self.maze.coinList[0].centerx - self.player.x
-                dO_y=self.maze.obstacleList[0].centery - self.player.y
-                dO_x=self.maze.obstacleList[0].centerx -self.player.x
+            # --- START IA INPUT ----
 
-                print(gy, gx)
-                force_Y=self.IA_controller_Y(gx, dO_y)
-                force_X=self.IA_controller_X(gy, dO_x)
-                print('forceX = {} | forceY = {}'.format(force_X,force_Y))
-                self.doForce_X(force_X)
-                self.doForce_Y(force_Y)
-
-            if self.IA_controller_angle is not None:
+            if self.fuzz_ctrl is not None:
                 # Let's try to get the obstacles :
                 # the 4 lists are [wall_list, obstacle_list, item_list, monster_list]
                 percept=self.maze.make_perception_list(self.player, self._display_surf)
 
-                self.vectors_to_show =[]
+                self.vectors_to_show.clear()
                 allObs=[]
                 for walls in percept[0] :
                     allObs.append((walls.centerx,walls.centery,walls))
                 for obs in percept[1] :
                     allObs.append((obs.centerx,obs.centery,obs))
-
                 #Should avoid monster too
                 for mons in percept[3] :
                     allObs.append((mons.centerx,mons.centery,mons))
 
-                if len(percept[2]) ==0 :
+                # GOAL HANDLER :
+                gx,gy=None,None
+                if self.current_path: # if we have a current path we set the goal as the next coordinate of the player
+                    next_goal_index = self.current_path.index(self.getPlayerCoord())
+
+                    if next_goal_index is not None and next_goal_index!=len(self.current_path):
+                        case_goal = self.current_path[next_goal_index + 1]
+                        gx = (case_goal[0] + 0.5) * self.maze.tile_size_x
+                        gy = (case_goal[1] + 0.5) * self.maze.tile_size_y
+                    else :
+                        print(f"Player coord {self.getPlayerCoord()} not in path to current path :\n{self.current_path}")
+
+                elif len(percept[2]) ==0 :
                     #get goal from coin List or Treasure List or exit
                     if len(self.maze.coinList) >0 :
-                        # gx = self.maze.coinList[0].centerx
-                        # gy = self.maze.coinList[0].centery
+                        gx = self.maze.coinList[0].centerx
+                        gy = self.maze.coinList[0].centery
 
-                        case_goal = self.path_to_cross[self.path_to_cross.index(self.getPlayerCoord())+1]
-                        gx = (case_goal[1] + 0.5) * self.maze.tile_size_x
-                        gy = (case_goal[0] + 0.5) * self.maze.tile_size_y
-                        # print('x_goal = {} | y_goal = {}'.format(gx,gy))
                     elif len(self.maze.treasureList) >0 :
-                        # gx = self.maze.treasureList[0].centerx
-                        # gy = self.maze.treasureList[0].centery
+                        gx = self.maze.treasureList[0].centerx
+                        gy = self.maze.treasureList[0].centery
 
-                        case_goal = self.path_to_cross[self.path_to_cross.index(self.getPlayerCoord()) + 1]
-                        gx = (case_goal[1] + 0.5) * self.maze.tile_size_x
-                        gy = (case_goal[0] + 0.5) * self.maze.tile_size_y
                     elif self.maze.exit :
                         gx=self.maze.exit.centerx
                         gy=self.maze.exit.centery
@@ -255,51 +206,49 @@ class App_2 (App):
                     if self.FOLLOW_MOUSE:
                         gx, gy = pygame.mouse.get_pos()
 
-                else :
+                else : # If we percept something we set it as the goal
                     goal = percept[2][0]
                     gy = goal.centery
                     gx = goal.centerx
 
-                self.vectors_to_show.append((gx,gy))
-                player_pos=self.player.get_rect().center
-                gx-= player_pos[0]
-                gy-= player_pos[1]
+                 # IF WE FOUND A GOAL :
+                if gx and gy :
+                    self.vectors_to_show.append((gx,gy))
+                    player_pos=self.player.get_rect().center
+                    gx-= player_pos[0]
+                    gy-= player_pos[1]
 
 
-                rG, thethaG = self.cart2Polar(gx, gy)
+                    rG, thethaG = self.cart2Polar(gx, gy)
+                    if not allObs : # If there is no obstacles
+                        allObs.append((-gx,-gy,None))
+                    alldev=[]
+                    for (ox,oy,oObject) in allObs :
+                        self.vectors_to_show.append((ox,oy))
+                        #vecteur obstacle joueur
+                        ox-= player_pos[0]
+                        oy-= player_pos[1]
+                        rO, thethaO = self.cart2Polar(ox, oy)
 
-                if not allObs :
-                    allObs.append((-gx,-gy,None))
-                alldev=[]
-                for (ox,oy,oObject) in allObs :
-                    self.vectors_to_show.append((ox,oy))
-                    #vecteur obstacle joueur
-                    ox-= player_pos[0]
-                    oy-= player_pos[1]
-                    rO, thethaO = self.cart2Polar(ox, oy)
+                        rO=self.getSmallest_distance_rects(oObject,self.player.get_rect())
+                        theta=fix_angle(thethaO-thethaG)
 
-                    rO=self.getSmallest_distance_rects(oObject,self.player.get_rect())
+                        theta_prime=self.fuzz_ctrl[(theta,rO)]
+                        alldev.append(theta_prime)
 
-                    theta=fix_angle(thethaO-thethaG)
-                    theta_prime=self.IA_controller_angle(theta,rO)
+                    # We use the absolute max
+                    theta_prime = getAbsMax(alldev)
+                    thethaG += theta_prime
 
-                    alldev.append(theta_prime)
+                    R = 3
+                    self.Fx, self.Fy = self.Polar2Cart(R, thethaG)
+                    self.doForce_X(self.Fx)
+                    self.doForce_Y(self.Fy)
 
-
-                theta_prime = getAbsMax(alldev)
-                thethaG += theta_prime
-
-                R = 3
-                self.Fx, self.Fy = self.Polar2Cart(R, thethaG)
-                self.doForce_X(self.Fx)
-                self.doForce_Y(self.Fy)
-
-
-                self.new_pos=self.player.get_position()
-
-
-            # self.on_AI_input(instruction)
-            #
+            # --- END IA INPUT ----
+            # we compute a new current_path everytime we change case
+            if self.plannificatorFun and self.ChangeCaseDetector():
+                self.current_path = self.plannificatorFun(self.getPlayerCoord(), self.goalTypes)
 
             if self.on_coin_collision():
                 self.score += 1
@@ -316,11 +265,8 @@ class App_2 (App):
                 self._running = False
                 self._win = True
 
-            if self.ChangeCaseDetector():
-                self.path_to_cross = self.path_to_show(self.getPlayerCoord(), self.goalTypes)
-                self.color_test()
             self.on_render()
-            #pygame.time.wait(100)
+
 
         while self._win:
             for event in pygame.event.get():
