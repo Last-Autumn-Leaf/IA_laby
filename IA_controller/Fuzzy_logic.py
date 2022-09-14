@@ -148,9 +148,11 @@ class FuzzPlayer:
         distance["P"] = fuzz.trapmf(distance.universe, [-2 * max_R, -2 * max_R, 0, max_R])
         distance["L"] = fuzz.trapmf(distance.universe, [0, max_R, 2 * max_R, 2 * max_R])
 
-        Pcommand["G"] = fuzz.trimf(Pcommand.universe, [-np.pi/2, -np.pi/4, 0])
-        Pcommand["C"] = fuzz.trimf(Pcommand.universe, [-np.pi/4, 0, np.pi/4])
-        Pcommand["D"] = fuzz.trimf(Pcommand.universe, [0, np.pi / 4, np.pi/2])
+
+        Pcommand_val=np.pi/4
+        Pcommand["G"] = fuzz.trimf(Pcommand.universe, [-2*Pcommand_val, -Pcommand_val, 0])
+        Pcommand["C"] = fuzz.trimf(Pcommand.universe, [-Pcommand_val, 0, Pcommand_val])
+        Pcommand["D"] = fuzz.trimf(Pcommand.universe, [0,Pcommand_val, 2*Pcommand_val])
 
 
         # self.create_membership_function(angle, np.pi/2, n_function=3)
@@ -188,7 +190,7 @@ if __name__ == '__main__':
 
     fuzz_ctrl = FuzzPlayer()
     fuzz_ctrl.set_fuzzy_angles_sim(tile_size,theAPP.player.get_size())
-    SHOW_VARIABLE=False
+    SHOW_VARIABLE=True
     if SHOW_VARIABLE :
         for var in fuzz_ctrl.sim.ctrl.fuzzy_variables:
              var.view()

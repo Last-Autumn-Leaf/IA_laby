@@ -177,7 +177,7 @@ class App_2 (App):
 
     def on_execute(self):
 
-        #self.path_to_cross = self.path_to_show(self.getPlayerCoord(), self.goalTypes)
+        self.path_to_cross = self.path_to_show(self.getPlayerCoord(), self.goalTypes)
         def fix_angle(a):
             if a >=np.pi :
                 a-= 2*np.pi
@@ -231,20 +231,20 @@ class App_2 (App):
                 if len(percept[2]) ==0 :
                     #get goal from coin List or Treasure List or exit
                     if len(self.maze.coinList) >0 :
-                        gx = self.maze.coinList[0].centerx
-                        gy = self.maze.coinList[0].centery
+                        # gx = self.maze.coinList[0].centerx
+                        # gy = self.maze.coinList[0].centery
 
-                        # case_goal = self.path_to_cross[self.path_to_cross.index(self.getPlayerCoord())+1]
-                        # gx = (case_goal[1] + 0.5) * self.maze.tile_size_x
-                        # gy = (case_goal[0] + 0.5) * self.maze.tile_size_y
+                        case_goal = self.path_to_cross[self.path_to_cross.index(self.getPlayerCoord())+1]
+                        gx = (case_goal[1] + 0.5) * self.maze.tile_size_x
+                        gy = (case_goal[0] + 0.5) * self.maze.tile_size_y
                         # print('x_goal = {} | y_goal = {}'.format(gx,gy))
                     elif len(self.maze.treasureList) >0 :
-                        gx = self.maze.treasureList[0].centerx
-                        gy = self.maze.treasureList[0].centery
+                        # gx = self.maze.treasureList[0].centerx
+                        # gy = self.maze.treasureList[0].centery
 
-                        # case_goal = self.path_to_cross[self.path_to_cross.index(self.getPlayerCoord()) + 1]
-                        # gx = (case_goal[1] + 0.5) * self.maze.tile_size_x
-                        # gy = (case_goal[0] + 0.5) * self.maze.tile_size_y
+                        case_goal = self.path_to_cross[self.path_to_cross.index(self.getPlayerCoord()) + 1]
+                        gx = (case_goal[1] + 0.5) * self.maze.tile_size_x
+                        gy = (case_goal[0] + 0.5) * self.maze.tile_size_y
                     elif self.maze.exit :
                         gx=self.maze.exit.centerx
                         gy=self.maze.exit.centery
@@ -261,7 +261,6 @@ class App_2 (App):
                 player_pos=self.player.get_rect().center
                 gx-= player_pos[0]
                 gy-= player_pos[1]
-                theta_prime=0.0
 
 
                 rG, thethaG = self.cart2Polar(gx, gy)
@@ -291,7 +290,7 @@ class App_2 (App):
                             abs_max=i
                     return abs_max
 
-                theta_prime =getAbsMax(alldev)
+                theta_prime =np.mean(alldev)
                 thethaG += theta_prime
 
                 R = 2
@@ -321,9 +320,9 @@ class App_2 (App):
                 self._running = False
                 self._win = True
 
-            '''if self.ChangeCaseDetector():
+            if self.ChangeCaseDetector():
                 self.path_to_cross = self.path_to_show(self.getPlayerCoord(), self.goalTypes)
-                self.color_test()'''
+                self.color_test()
             self.on_render()
             #pygame.time.wait(100)
 

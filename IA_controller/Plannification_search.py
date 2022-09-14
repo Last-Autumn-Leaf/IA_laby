@@ -44,7 +44,7 @@ class Plannificator:
 if __name__ == '__main__':
     setCorrectCHWD()
 
-    map_file_name='assets/mazeMedium_1'
+    map_file_name='assets/mazeMedium_4'
     theAPP = App_2(map_file_name)
     maze=theAPP.maze.maze
     plannificator = Plannificator(PrologCom(maze))
