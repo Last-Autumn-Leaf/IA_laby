@@ -179,17 +179,23 @@ class App_2 (App):
 
                 # GOAL HANDLER :
                 gx,gy=None,None
-                if self.current_path: # if we have a current path we set the goal as the next coordinate of the player
-                    next_goal_index = self.current_path.index(self.getPlayerCoord())
+                player_coord=self.getPlayerCoord()
 
-                    if next_goal_index is not None and next_goal_index!=len(self.current_path):
-                        case_goal = self.current_path[next_goal_index + 1]
+                # if we have a current path we set the goal as the next coordinate of the player
+                if self.current_path and player_coord in self.current_path:
+                    current_goal_index = self.current_path.index(player_coord)
+                    if current_goal_index!=len(self.current_path)-1:
+                        case_goal = self.current_path[current_goal_index + 1]
                         gx = (case_goal[0] + 0.5) * self.maze.tile_size_x
                         gy = (case_goal[1] + 0.5) * self.maze.tile_size_y
-                    else :
-                        print(f"Player coord {self.getPlayerCoord()} not in path to current path :\n{self.current_path}")
 
-                elif len(percept[2]) ==0 :
+
+                if len(percept[2]) !=0: # If we percept something we set it as the goal
+                    goal = percept[2][0]
+                    gy = goal.centery
+                    gx = goal.centerx
+
+                elif len(percept[2]) ==0  and gx is None:
                     #get goal from coin List or Treasure List or exit
                     if len(self.maze.coinList) >0 :
                         gx = self.maze.coinList[0].centerx
@@ -206,10 +212,7 @@ class App_2 (App):
                     if self.FOLLOW_MOUSE:
                         gx, gy = pygame.mouse.get_pos()
 
-                else : # If we percept something we set it as the goal
-                    goal = percept[2][0]
-                    gy = goal.centery
-                    gx = goal.centerx
+
 
                  # IF WE FOUND A GOAL :
                 if gx and gy :
