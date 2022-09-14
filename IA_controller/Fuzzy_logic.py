@@ -126,42 +126,46 @@ class FuzzPlayer:
 
         #minR= min(player_size) /2 +min(tile_size) /2
         #max_R = PERCEPTION_RADIUS * max(tile_size)
-        getRadius = lambda size : np.sqrt(  size[0]**2 + size[1]**2  )
-        max_R =getRadius(tile_size)
+        getRadius = lambda size : np.sqrt( size[0]**2 + size[1]**2 )
+        max_R = PERCEPTION_RADIUS * getRadius(tile_size)
         #minR_radius = getRadius ( [x/2 for x in player_size] ) + getRadius ( [x/2 for x in tile_size] )
 
 
         rlimit=-max_R *3
-        angle = ctrl.Antecedent(np.linspace(-np.pi, np.pi, 10000), 'angle')
-        rayon = ctrl.Antecedent(np.linspace(-3*max_R, 2*max_R , 10000), 'rayon')
-        Pcommand = ctrl.Consequent(np.linspace(-2*np.pi, 2*np.pi, 10000), 'PlayerCommand', defuzzify_method='centroid')
+        theta = ctrl.Antecedent(np.linspace(-np.pi, np.pi, 10000), 'angle')
+        distance = ctrl.Antecedent(np.linspace(-2 * max_R, 2 * max_R, 10000), 'rayon')
+        Pcommand = ctrl.Consequent(np.linspace(-np.pi, np.pi, 10000), 'PlayerCommand', defuzzify_method='centroid')
 
         # Accumulation (accumulation_method) methods for fuzzy variables:
         #    np.fmax
         #    np.multiply
         Pcommand.accumulation_method = np.fmax
 
-        rayon["μ_0"] = fuzz.trapmf(rayon.universe, [-4*max_R,-2*max_R,-max_R,0])
-        rayon["μ_1"] = fuzz.trapmf(rayon.universe, [-max_R,0,max_R,4*max_R])
+        theta["G"] = fuzz.trapmf(theta.universe, [-2*np.pi, -2*np.pi, -np.pi / 4, 0])
+        theta["C"] = fuzz.trimf(theta.universe, [-np.pi/4, 0, np.pi/4])
+        theta["D"] = fuzz.trapmf(theta.universe, [0, np.pi / 4, 2*np.pi, 2*np.pi])
 
-        self.create_membership_function(angle, np.pi/2, n_function=3)
-        self.create_membership_function(Pcommand, np.pi/3, n_function=3, saturation=False)
+        distance["P"] = fuzz.trapmf(distance.universe, [-2 * max_R, -2 * max_R, 0, max_R])
+        distance["L"] = fuzz.trapmf(distance.universe, [0, max_R, 2 * max_R, 2 * max_R])
+
+        Pcommand["G"] = fuzz.trapmf(Pcommand.universe, [-np.pi, -np.pi, -np.pi / 4, 0])
+        Pcommand["C"] = fuzz.trimf(Pcommand.universe, [-np.pi/4, 0, np.pi/4])
+        Pcommand["D"] = fuzz.trapmf(Pcommand.universe, [0, np.pi / 4, np.pi, np.pi])
+
+
+        # self.create_membership_function(angle, np.pi/2, n_function=3)
+        # self.create_membership_function(Pcommand, np.pi/3, n_function=3, saturation=False)
 
         rules = []
 
-        rules.append(ctrl.Rule(antecedent=(rayon["μ_0"]  & angle["μ_0"] ) , consequent=Pcommand["μ_0"]))
-        rules.append(ctrl.Rule(antecedent=(rayon["μ_0"]  & angle["μ_2"] ) , consequent=Pcommand["μ_2"]))
-        #rules.append(ctrl.Rule(antecedent=(rayon["μ_0"]  & angle["μ_1"] ) , consequent=Pcommand["μ_1"]))
+        rules.append(ctrl.Rule(antecedent=((theta["G"]|theta["C"]) & distance["P"]), consequent=Pcommand["D"]))
+        rules.append(ctrl.Rule(antecedent=((theta["G"]|theta["C"]) & distance["L"]), consequent=Pcommand["C"]))
 
-        rules.append(ctrl.Rule(antecedent=(rayon["μ_1"] & angle["μ_0"]), consequent=Pcommand["μ_1"]))
-        rules.append(ctrl.Rule(antecedent=(rayon["μ_1"] & angle["μ_2"]), consequent=Pcommand["μ_1"]))
+        rules.append(ctrl.Rule(antecedent=((theta["D"]|theta["C"]) & distance["P"]), consequent=Pcommand["G"]))
+        rules.append(ctrl.Rule(antecedent=((theta["D"]|theta["C"]) & distance["L"]), consequent=Pcommand["C"]))
 
-        #rules.append(ctrl.Rule(antecedent=(rayon["μ_1"]  & angle["μ_0"] ) , consequent=Pcommand["μ_0"]))
-        #rules.append(ctrl.Rule(antecedent=(rayon["μ_1"]  & angle["μ_2"] ) , consequent=Pcommand["μ_2"]))
-        #rules.append(ctrl.Rule(antecedent=(rayon["μ_1"]  & angle["μ_1"] ) , consequent=Pcommand["μ_1"]))
-
-
-
+        #rules.append(ctrl.Rule(antecedent=(theta["C"] & distance["P"]), consequent=Pcommand["G"] | Pcommand["D"]))
+        #rules.append(ctrl.Rule(antecedent=(theta["C"] & distance["L"]), consequent=Pcommand["C"]))
 
         for rule in rules:
             rule.and_func = np.fmin
