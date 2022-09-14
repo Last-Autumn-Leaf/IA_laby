@@ -160,14 +160,14 @@ class FuzzPlayer:
 
         rules = []
 
-        rules.append(ctrl.Rule(antecedent=((theta["G"] | theta["C"] ) & distance["P"]), consequent=Pcommand["D"]))
+        rules.append(ctrl.Rule(antecedent=((theta["G"]  ) & distance["P"]), consequent=Pcommand["D"]))
         rules.append(ctrl.Rule(antecedent=((theta["G"] ) & distance["L"]), consequent=Pcommand["C"]))
 
-        rules.append(ctrl.Rule(antecedent=((theta["D"]| theta["C"]) & distance["P"]), consequent=Pcommand["G"]))
+        rules.append(ctrl.Rule(antecedent=((theta["D"]) & distance["P"]), consequent=Pcommand["G"]))
         rules.append(ctrl.Rule(antecedent=((theta["D"]) & distance["L"]), consequent=Pcommand["C"]))
 
-        #rules.append(ctrl.Rule(antecedent=(theta["C"] & distance["P"]), consequent=Pcommand["G"] ))
-        #rules.append(ctrl.Rule(antecedent=(theta["C"] & distance["L"]), consequent=Pcommand["C"]))
+        rules.append(ctrl.Rule(antecedent=(theta["C"] & distance["P"]), consequent=Pcommand["G"] ))
+        rules.append(ctrl.Rule(antecedent=(theta["C"] & distance["L"]), consequent=Pcommand["C"]))
 
         for rule in rules:
             rule.and_func = np.fmin
