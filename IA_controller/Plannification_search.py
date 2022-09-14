@@ -51,7 +51,7 @@ if __name__ == '__main__':
     maze=theAPP.maze.maze
 
     plannificator = Plannificator(PrologCom(maze))
-    theAPP.setGoalTypes(['coin','exit'])
+    theAPP.setGoalTypes(['treasure','exit'])
     theAPP.setPlanFun(plannificator.naivePlanification)
 
     ### Integration de fuzzy ###

@@ -190,18 +190,19 @@ class App_2 (App):
 
                         if current_goal_index is not None and current_goal_index != len(self.current_path):
                             case_goal = self.current_path[current_goal_index + 1]
-                            next_case_right_or_left = case_goal[1] == current_case[1]
-                            next_case_top_or_bottom = case_goal[0] == current_case[0]
+                            # next_case_right_or_left = case_goal[1] == current_case[1]
+                            # next_case_top_or_bottom = case_goal[0] == current_case[0]
+                            #
+                            # if next_case_right_or_left:
+                            #     gx = (case_goal[0]) * self.maze.tile_size_x
+                            #     gy = (case_goal[1] + 0.5) * self.maze.tile_size_y
+                            #
+                            # if next_case_top_or_bottom:
+                            #     gx = (case_goal[0]+ 0.5) * self.maze.tile_size_x
+                            #     gy = (case_goal[1]) * self.maze.tile_size_y
 
-                            if next_case_right_or_left:
-                                gx = (case_goal[0]) * self.maze.tile_size_x
-                                gy = (case_goal[1] + 0.5) * self.maze.tile_size_y
-
-                            if next_case_top_or_bottom:
-                                gx = (case_goal[0]+ 0.5) * self.maze.tile_size_x
-                                gy = (case_goal[1]) * self.maze.tile_size_y
-
-
+                            gx = (case_goal[0] + 0.5) * self.maze.tile_size_x
+                            gy = (case_goal[1]+ 0.5) * self.maze.tile_size_y
 
                 if len(percept[2]) !=0: # If we percept something we set it as the goal
                     goal = percept[2][0]
