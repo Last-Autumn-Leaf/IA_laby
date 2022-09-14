@@ -139,18 +139,39 @@ class App_2 (App):
 
 
     def getSmallest_distance_rects(self,rect1,rect2):
-        if rect1 is None :
-            return PERCEPTION_RADIUS * self.getRadius((self.maze.tile_size_x,self.maze.tile_size_y))
-        X =  (rect1.top -rect2.top,rect1.top -rect2.bottom,
-                 rect1.bottom -rect2.top,rect1.bottom -rect2.bottom)
-        X =[ abs(dx) for dx in X]
-        X=min(X)
-        Y =  (rect1.right -rect2.right,rect1.right -rect2.left,
-                 rect1.left -rect2.right,rect1.left -rect2.left)
-        Y = [abs(dy) for dy in Y]
-        Y=min(Y)
+        dist = lambda p1,p2 : np.sqrt((p1[0]-p2[0])**2+ (p1[1]-p2[1])**2)
 
-        return np.sqrt(  X**2 + Y**2 )
+        if rect1 is None :
+            return PERCEPTION_RADIUS * self.getRadius((self.maze.tile_size_x, self.maze.tile_size_y))
+
+        (x1, y1)=rect1.topleft
+        (x1b, y1b)=rect1.bottomright
+        (x2, y2)=rect2.topleft
+        (x2b, y2b)=rect2.bottomright
+
+        left = x2b < x1
+        right = x1b < x2
+        bottom = y2b < y1
+        top = y1b < y2
+        if top and left:
+            return dist((x1, y1b), (x2b, y2))
+        elif left and bottom:
+            return dist((x1, y1), (x2b, y2b))
+        elif bottom and right:
+            return dist((x1b, y1), (x2, y2b))
+        elif right and top:
+            return dist((x1b, y1b), (x2, y2))
+        elif left:
+            return x1 - x2b
+        elif right:
+            return x2 - x1b
+        elif bottom:
+            return y1 - y2b
+        elif top:
+            return y2 - y1b
+        else:  # rectangles intersect
+            return 0.
+
 
 
 
@@ -233,7 +254,8 @@ class App_2 (App):
                 gx-= player_pos[0]
                 gy-= player_pos[1]
                 theta_prime=0.0
-                moy=0.0
+
+
                 rG, thethaG = self.cart2Polar(gx, gy)
 
                 if not allObs :
@@ -252,7 +274,15 @@ class App_2 (App):
 
                     alldev.append(theta_prime)
 
-                theta_prime =np.max(alldev)
+
+                def getAbsMax(a):
+                    abs_max=a[0]
+                    for i in a  :
+                        if abs(abs_max) < abs(i) :
+                            abs_max=i
+                    return abs_max
+
+                theta_prime =getAbsMax(alldev)
                 thethaG += theta_prime
 
                 R = 2

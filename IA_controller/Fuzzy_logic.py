@@ -158,14 +158,14 @@ class FuzzPlayer:
 
         rules = []
 
-        rules.append(ctrl.Rule(antecedent=((theta["G"]|theta["C"]) & distance["P"]), consequent=Pcommand["D"]))
-        rules.append(ctrl.Rule(antecedent=((theta["G"]|theta["C"]) & distance["L"]), consequent=Pcommand["C"]))
+        rules.append(ctrl.Rule(antecedent=((theta["G"]  ) & distance["P"]), consequent=Pcommand["D"]))
+        rules.append(ctrl.Rule(antecedent=((theta["G"]) & distance["L"]), consequent=Pcommand["C"]))
 
-        rules.append(ctrl.Rule(antecedent=((theta["D"]|theta["C"]) & distance["P"]), consequent=Pcommand["G"]))
-        rules.append(ctrl.Rule(antecedent=((theta["D"]|theta["C"]) & distance["L"]), consequent=Pcommand["C"]))
+        rules.append(ctrl.Rule(antecedent=((theta["D"]) & distance["P"]), consequent=Pcommand["G"]))
+        rules.append(ctrl.Rule(antecedent=((theta["D"]) & distance["L"]), consequent=Pcommand["C"]))
 
-        #rules.append(ctrl.Rule(antecedent=(theta["C"] & distance["P"]), consequent=Pcommand["G"] | Pcommand["D"]))
-        #rules.append(ctrl.Rule(antecedent=(theta["C"] & distance["L"]), consequent=Pcommand["C"]))
+        rules.append(ctrl.Rule(antecedent=(theta["C"] & distance["P"]), consequent=Pcommand["G"] ))
+        rules.append(ctrl.Rule(antecedent=(theta["C"] & distance["L"]), consequent=Pcommand["C"]))
 
         for rule in rules:
             rule.and_func = np.fmin
@@ -188,7 +188,7 @@ if __name__ == '__main__':
 
     fuzz_ctrl = FuzzPlayer()
     fuzz_ctrl.set_fuzzy_angles_sim(tile_size,theAPP.player.get_size())
-    SHOW_VARIABLE=True
+    SHOW_VARIABLE=False
     if SHOW_VARIABLE :
         for var in fuzz_ctrl.sim.ctrl.fuzzy_variables:
              var.view()
