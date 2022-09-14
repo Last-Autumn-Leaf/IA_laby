@@ -142,7 +142,7 @@ class FuzzPlayer:
         Pcommand.accumulation_method = np.fmax
 
         theta["G"] = fuzz.trapmf(theta.universe, [-2*np.pi, -2*np.pi, -np.pi / 4, 0])
-        theta["C"] = fuzz.trimf(theta.universe, [-np.pi/32, 0, np.pi/32])
+        theta["C"] = fuzz.trimf(theta.universe, [-np.pi/128, 0, np.pi/128])
         theta["D"] = fuzz.trapmf(theta.universe, [0, np.pi / 4, 2*np.pi, 2*np.pi])
 
         distance["P"] = fuzz.trapmf(distance.universe, [-2 * max_R, -2 * max_R, 0, max_R])
@@ -160,14 +160,14 @@ class FuzzPlayer:
 
         rules = []
 
-        rules.append(ctrl.Rule(antecedent=((theta["G"]  ) & distance["P"]), consequent=Pcommand["D"]))
-        rules.append(ctrl.Rule(antecedent=((theta["G"]) & distance["L"]), consequent=Pcommand["C"]))
+        rules.append(ctrl.Rule(antecedent=((theta["G"] | theta["C"] ) & distance["P"]), consequent=Pcommand["D"]))
+        rules.append(ctrl.Rule(antecedent=((theta["G"] ) & distance["L"]), consequent=Pcommand["C"]))
 
-        rules.append(ctrl.Rule(antecedent=((theta["D"]) & distance["P"]), consequent=Pcommand["G"]))
+        rules.append(ctrl.Rule(antecedent=((theta["D"]| theta["C"]) & distance["P"]), consequent=Pcommand["G"]))
         rules.append(ctrl.Rule(antecedent=((theta["D"]) & distance["L"]), consequent=Pcommand["C"]))
 
-        rules.append(ctrl.Rule(antecedent=(theta["C"] & distance["P"]), consequent=Pcommand["G"] ))
-        rules.append(ctrl.Rule(antecedent=(theta["C"] & distance["L"]), consequent=Pcommand["C"]))
+        #rules.append(ctrl.Rule(antecedent=(theta["C"] & distance["P"]), consequent=Pcommand["G"] ))
+        #rules.append(ctrl.Rule(antecedent=(theta["C"] & distance["L"]), consequent=Pcommand["C"]))
 
         for rule in rules:
             rule.and_func = np.fmin
@@ -182,7 +182,7 @@ class FuzzPlayer:
 
 if __name__ == '__main__':
     setCorrectCHWD()
-    map_file_name = 'assets/test_Map'
+    map_file_name = 'assets/mazeMedium_0'
     theAPP = App_2(map_file_name)
 
 
@@ -190,7 +190,7 @@ if __name__ == '__main__':
 
     fuzz_ctrl = FuzzPlayer()
     fuzz_ctrl.set_fuzzy_angles_sim(tile_size,theAPP.player.get_size())
-    SHOW_VARIABLE=True
+    SHOW_VARIABLE=False
     if SHOW_VARIABLE :
         for var in fuzz_ctrl.sim.ctrl.fuzzy_variables:
              var.view()

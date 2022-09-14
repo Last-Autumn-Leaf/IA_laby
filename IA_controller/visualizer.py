@@ -183,7 +183,12 @@ class App_2 (App):
                 a+= 2*np.pi
             return a
 
-
+        def getAbsMax(a):
+            abs_max = a[0]
+            for i in a:
+                if abs(abs_max) < abs(i):
+                    abs_max = i
+            return abs_max
 
         while self._running:
             self._clock.tick(GAME_CLOCK)
@@ -280,13 +285,6 @@ class App_2 (App):
 
                     alldev.append(theta_prime)
 
-
-                def getAbsMax(a):
-                    abs_max=a[0]
-                    for i in a  :
-                        if abs(abs_max) < abs(i) :
-                            abs_max=i
-                    return abs_max
 
                 theta_prime = getAbsMax(alldev)
                 thethaG += theta_prime
