@@ -142,7 +142,7 @@ class FuzzPlayer:
         Pcommand.accumulation_method = np.fmax
 
         theta["G"] = fuzz.trapmf(theta.universe, [-2*np.pi, -2*np.pi, -np.pi / 4, 0])
-        theta["C"] = fuzz.trimf(theta.universe, [-np.pi/4, 0, np.pi/4])
+        theta["C"] = fuzz.trimf(theta.universe, [-np.pi/32, 0, np.pi/32])
         theta["D"] = fuzz.trapmf(theta.universe, [0, np.pi / 4, 2*np.pi, 2*np.pi])
 
         distance["P"] = fuzz.trapmf(distance.universe, [-2 * max_R, -2 * max_R, 0, max_R])

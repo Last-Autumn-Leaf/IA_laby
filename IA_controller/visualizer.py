@@ -102,7 +102,6 @@ class App_2 (App):
 
         return x,y
     def doForce_Y(self,force):
-        force = force / 100
         if force <0 :
             force =np.floor(force)
         else :
@@ -115,7 +114,6 @@ class App_2 (App):
             else:
                 self.on_AI_input('UP')
     def doForce_X(self,force):
-        force = force/100
         if force <0 :
             force = np.floor(force)
         else :
@@ -290,10 +288,10 @@ class App_2 (App):
                             abs_max=i
                     return abs_max
 
-                theta_prime =np.mean(alldev)
+                theta_prime = getAbsMax(alldev)
                 thethaG += theta_prime
 
-                R = 2
+                R = 3
                 self.Fx, self.Fy = self.Polar2Cart(R, thethaG)
                 self.doForce_X(self.Fx)
                 self.doForce_Y(self.Fy)
