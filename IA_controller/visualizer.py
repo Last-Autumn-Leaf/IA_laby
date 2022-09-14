@@ -36,7 +36,7 @@ class App_2 (App):
 
     def color_render(self,color=(0,255,0,70)):
         display_surf=self._display_surf
-        player_pos=(self.player.x +int(self.player.size_x/2), self.player.y+int(self.player.size_y/2))
+        player_pos=self.player.get_rect().center
         for (x,y) in self.vectors_to_show :
             pygame.draw.line(display_surf, WHITE, player_pos,
                          (x,y))
@@ -45,7 +45,7 @@ class App_2 (App):
         # draw dmin not usefull
         #pygame.draw.circle(display_surf,GREEN,player_pos,self.dmin,width=3)
         #Draw current dirrection
-        pygame.draw.line(display_surf, GREEN, player_pos,(self.player.x +20*self.Fx, self.player.y+20*self.Fy))
+        pygame.draw.line(display_surf, GREEN, player_pos,(player_pos[0] + int(50*self.Fx), player_pos[1] + int(50*self.Fy)))
 
     def color_test(self,color=(0,255,0,70)):
         display_surf = self._display_surf
@@ -75,7 +75,7 @@ class App_2 (App):
         self.IA_controller_X=controllerXfun
         self.IA_controller_Y=controllerYfun
 
-    getAngle= lambda self,xa,ya,xb,yb:  np.arccos[(xa * xb + ya * yb) / (np.sqrt(xa**2 + ya**2) * np.sqrt(xb**2 + yb**2))]
+    getRadius = lambda self,size : np.sqrt(  size[0]**2 + size[1]**2  )
     def setIA_controller_angles(self,controllerfun):
         self.IA_controller_angle=controllerfun
 
@@ -138,14 +138,7 @@ class App_2 (App):
             return False
     def on_execute(self):
 
-        #compute dmin
-        x, y = self.player.get_size()
-        self.dmin = np.sqrt(x ** 2 + y ** 2)
-        self.dmin = 0
-
-        a = self.getPlayerCoord()
-
-        self.path_to_cross = self.path_to_show(self.getPlayerCoord(), self.goalTypes)
+        #self.path_to_cross = self.path_to_show(self.getPlayerCoord(), self.goalTypes)
 
         while self._running:
             self._clock.tick(GAME_CLOCK)
@@ -180,29 +173,31 @@ class App_2 (App):
                 self.vectors_to_show =[]
                 allObs=[]
                 for walls in percept[0] :
-                    allObs.append((walls.centerx,walls.centery))
+                    allObs.append((walls.centerx,walls.centery,walls))
                 for obs in percept[1] :
-                    allObs.append((obs.centerx,obs.centery))
+                    allObs.append((obs.centerx,obs.centery,obs))
 
                 #Should avoid monster too
                 for mons in percept[3] :
-                    allObs.append((mons.centerx,mons.centery))
+                    allObs.append((mons.centerx,mons.centery,mons))
 
                 if len(percept[2]) ==0 :
                     #get goal from coin List or Treasure List or exit
                     if len(self.maze.coinList) >0 :
-                        # gx = self.maze.coinList[0].centerx
-                        # gy = self.maze.coinList[0].centery
-                        case_goal = self.path_to_cross[self.path_to_cross.index(self.getPlayerCoord())+1]
-                        gx = (case_goal[1] + 0.5) * self.maze.tile_size_x
-                        gy = (case_goal[0] + 0.5) * self.maze.tile_size_y
+                        gx = self.maze.coinList[0].centerx
+                        gy = self.maze.coinList[0].centery
+
+                        # case_goal = self.path_to_cross[self.path_to_cross.index(self.getPlayerCoord())+1]
+                        # gx = (case_goal[1] + 0.5) * self.maze.tile_size_x
+                        # gy = (case_goal[0] + 0.5) * self.maze.tile_size_y
                         # print('x_goal = {} | y_goal = {}'.format(gx,gy))
                     elif len(self.maze.treasureList) >0 :
-                        # gx = self.maze.treasureList[0].centerx
-                        # gy = self.maze.treasureList[0].centery
-                        case_goal = self.path_to_cross[self.path_to_cross.index(self.getPlayerCoord()) + 1]
-                        gx = (case_goal[1] + 0.5) * self.maze.tile_size_x
-                        gy = (case_goal[0] + 0.5) * self.maze.tile_size_y
+                        gx = self.maze.treasureList[0].centerx
+                        gy = self.maze.treasureList[0].centery
+
+                        # case_goal = self.path_to_cross[self.path_to_cross.index(self.getPlayerCoord()) + 1]
+                        # gx = (case_goal[1] + 0.5) * self.maze.tile_size_x
+                        # gy = (case_goal[0] + 0.5) * self.maze.tile_size_y
                     elif self.maze.exit :
                         gx=self.maze.exit.centerx
                         gy=self.maze.exit.centery
@@ -215,36 +210,35 @@ class App_2 (App):
                     gy = goal.centery
                     gx = goal.centerx
 
-
-
-
                 self.vectors_to_show.append((gx,gy))
                 gx-= self.player.x
                 gy-= self.player.y
-                theta_prime=0
-                moy=0
+                theta_prime=0.0
+                moy=0.0
                 rG, thethaG = self.cart2Polar(gx, gy)
 
                 if not allObs :
-                    allObs.append((-gx,-gy))
-                for (ox,oy) in allObs :
+                    allObs.append((-gx,-gy,0))
+                for (ox,oy,oObject) in allObs :
                     self.vectors_to_show.append((ox,oy))
                     ox-= self.player.x
                     oy-= self.player.y
 
                     rO, thethaO = self.cart2Polar(ox, oy)
-                    if rO <= self.dmin :
-                        theta_prime+=self.IA_controller_angle(thethaO-thethaG,rO)
-                        moy+=1
+                    rO -=orad +self.dmin
+                    #if rO <= 0 :
+                    theta_prime+=self.IA_controller_angle(thethaO-thethaG,rO)
+                    moy+=1
 
                 theta_prime =theta_prime / moy if moy !=0 else 0
                 thethaG -= theta_prime
-                self.old_theta_prime=theta_prime
-                self.old_pos=self.player.get_position()
-                R = 10
+
+                R = 2
                 self.Fx, self.Fy = self.Polar2Cart(R, thethaG)
                 self.doForce_X(self.Fx)
                 self.doForce_Y(self.Fy)
+
+
                 self.new_pos=self.player.get_position()
 
 
@@ -266,10 +260,11 @@ class App_2 (App):
                 self._running = False
                 self._win = True
 
-            if self.ChangeCaseDetector():
+            '''if self.ChangeCaseDetector():
                 self.path_to_cross = self.path_to_show(self.getPlayerCoord(), self.goalTypes)
-                self.color_test()
+                self.color_test()'''
             self.on_render()
+            pygame.time.wait(100)
 
         while self._win:
             for event in pygame.event.get():
