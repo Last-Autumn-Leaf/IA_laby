@@ -17,8 +17,8 @@ class App_2 (App):
         self.Fy=0
         self.vectors_to_show=[]
         self.path_to_show=None
-        self.path_to_render = None
-        self.goalTypes=['exit']
+        self.path_to_cross = None
+        self.goalTypes=['coin','treasure','exit']
         self.old_pos=(0,0)
         self.new_pos=(0,0)
         self.old_theta_prime=0
@@ -51,8 +51,8 @@ class App_2 (App):
         display_surf = self._display_surf
         tile_size_x = self.maze.tile_size_x
         tile_size_y = self.maze.tile_size_y
-        if self.path_to_render is not None :
-            for coord in self.path_to_render:
+        if self.path_to_cross is not None :
+            for coord in self.path_to_cross:
                 i=coord[0]
                 j=coord[1]
                 #pygame.draw.rect(display_surf, GREEN,(j * tile_size_x, i * tile_size_y, tile_size_x, tile_size_y))
@@ -60,10 +60,10 @@ class App_2 (App):
 
     def getPlayerCoord(self):
         # coordonates are reversed !!!
-        y,x = self.player.get_position()
+        x,y = self.player.get_rect().center
         x=int(x / self.maze.tile_size_x)
         y=int(y / self.maze.tile_size_y)
-        return (x,y)
+        return (y,x)
 
 
     def setShowPathFun(self,getPathFun):
@@ -102,6 +102,7 @@ class App_2 (App):
 
         return x,y
     def doForce_Y(self,force):
+        force = force / 100
         if force <0 :
             force =np.floor(force)
         else :
@@ -114,12 +115,13 @@ class App_2 (App):
             else:
                 self.on_AI_input('UP')
     def doForce_X(self,force):
+        force = force/100
         if force <0 :
             force = np.floor(force)
         else :
             force= np.ceil(force)
         force=int(force)
-        for i in range(abs(force )):
+        for i in range(abs(force)):
             if force > 0:
                 self.on_AI_input('RIGHT')
             else:
@@ -140,6 +142,11 @@ class App_2 (App):
         x, y = self.player.get_size()
         self.dmin = np.sqrt(x ** 2 + y ** 2)
         self.dmin = 0
+
+        a = self.getPlayerCoord()
+
+        self.path_to_cross = self.path_to_show(self.getPlayerCoord(), self.goalTypes)
+
         while self._running:
             self._clock.tick(GAME_CLOCK)
             for event in pygame.event.get():
@@ -153,7 +160,6 @@ class App_2 (App):
 
             #
             if self.IA_controller_X is not None:
-
                 gx= self.maze.coinList[0].centery - self.player.y
                 gy= self.maze.coinList[0].centerx - self.player.x
                 dO_y=self.maze.obstacleList[0].centery - self.player.y
@@ -185,11 +191,18 @@ class App_2 (App):
                 if len(percept[2]) ==0 :
                     #get goal from coin List or Treasure List or exit
                     if len(self.maze.coinList) >0 :
-                        gx = self.maze.coinList[0].centerx
-                        gy = self.maze.coinList[0].centery
+                        # gx = self.maze.coinList[0].centerx
+                        # gy = self.maze.coinList[0].centery
+                        case_goal = self.path_to_cross[self.path_to_cross.index(self.getPlayerCoord())+1]
+                        gx = (case_goal[1] + 0.5) * self.maze.tile_size_x
+                        gy = (case_goal[0] + 0.5) * self.maze.tile_size_y
+                        # print('x_goal = {} | y_goal = {}'.format(gx,gy))
                     elif len(self.maze.treasureList) >0 :
-                        gx = self.maze.treasureList[0].centerx
-                        gy = self.maze.treasureList[0].centery
+                        # gx = self.maze.treasureList[0].centerx
+                        # gy = self.maze.treasureList[0].centery
+                        case_goal = self.path_to_cross[self.path_to_cross.index(self.getPlayerCoord()) + 1]
+                        gx = (case_goal[1] + 0.5) * self.maze.tile_size_x
+                        gy = (case_goal[0] + 0.5) * self.maze.tile_size_y
                     elif self.maze.exit :
                         gx=self.maze.exit.centerx
                         gy=self.maze.exit.centery
@@ -254,7 +267,7 @@ class App_2 (App):
                 self._win = True
 
             if self.ChangeCaseDetector():
-                self.path_to_render = self.path_to_show(self.getPlayerCoord(),self.goalTypes)
+                self.path_to_cross = self.path_to_show(self.getPlayerCoord(), self.goalTypes)
                 self.color_test()
             self.on_render()
 

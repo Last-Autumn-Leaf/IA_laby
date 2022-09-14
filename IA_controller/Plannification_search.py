@@ -5,6 +5,7 @@ from IA_controller.Helper_fun import setCorrectCHWD
 from IA_controller.PrologCom import PrologCom
 from IA_controller.visualizer import App_2
 
+from Fuzzy_logic import FuzzPlayer
 
 
 class Plannificator:
@@ -43,13 +44,21 @@ class Plannificator:
 if __name__ == '__main__':
     setCorrectCHWD()
 
-    map_file_name='assets/mazeMedium_0'
+    map_file_name='assets/mazeMedium_1'
     theAPP = App_2(map_file_name)
     maze=theAPP.maze.maze
     plannificator = Plannificator(PrologCom(maze))
 
-    theAPP.setGoalTypes(['coin','treasure'])
+    theAPP.setGoalTypes(['exit'])
     theAPP.setShowPathFun(plannificator.naivePlanification)
+
+    ### Integration de fuzzy ###
+    tile_size = (theAPP.maze.tile_size_x, theAPP.maze.tile_size_y)
+
+    fuzz_ctrl = FuzzPlayer()
+    fuzz_ctrl.set_fuzzy_angles_sim(tile_size, theAPP.player.get_size())
+    theAPP.setIA_controller_angles(fuzz_ctrl.getOutputFromAngles)
+    ### --- ###
 
     theAPP.on_execute()
 
