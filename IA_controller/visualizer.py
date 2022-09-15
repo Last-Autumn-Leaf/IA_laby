@@ -24,10 +24,14 @@ class App_2(App):
         self.Fx = 0
         self.Fy = 0
 
+        self.time_before_deblock = self.timer + 2
+        self.change_goal = False
+
         self.vectors_to_show = []
         self.goalTypes =goalTypes
         self.on_init()
         self.current_player_case = self.getPlayerCoord()
+        self.current_player_quadrant = self.getPlayerQuadrant()
         self.treasure_coin_list_size= len(self.maze.treasureList + self.maze.coinList)
 
         monsCoord=[ self.getCoordFromPix(mob.rect.center) for mob in self.maze.monsterList]
@@ -44,28 +48,6 @@ class App_2(App):
 
     getCoordQuadrantFromPix = lambda self, coord: (int(((coord[0] / self.maze.tile_size_x) % 1) / 0.5), int(((coord[1] / self.maze.tile_size_y) % 1) / 0.5))
     getCoordFromPix = lambda self, coord: (int(coord[0] / self.maze.tile_size_x), int(coord[1] / self.maze.tile_size_y))
-
-    def getPlayerQuadrant(self):
-        return self.getCoordQuadrantFromPix(self.player.get_rect().center)
-
-    def getOpposingQuadrant(self):
-        a = self.getPlayerQuadrant()
-        if a[0] == 0:
-            x = 1
-        else:
-            x = 0
-        if a[1] == 0:
-            y = 1
-        else:
-            y = 0
-        return x, y
-
-    def getOpposingQuadrantCenterPixel(self):
-        nx, ny = self.getPlayerCoord()
-        qx, qy = self.getOpposingQuadrant()
-        x = int((nx + 0.25) * self.maze.tile_size_x + qx * self.maze.tile_size_x / 2)
-        y = int((ny + 0.25) * self.maze.tile_size_y + qy * self.maze.tile_size_y / 2)
-        return x, y
 
     def reTrainGT(self):
         if self.GT.train(500) :
@@ -163,6 +145,37 @@ class App_2(App):
         else:
             return False
 
+    def getPlayerQuadrant(self):
+        return self.getCoordQuadrantFromPix(self.player.get_rect().center)
+
+    def getOpposingQuadrant(self):
+        a = self.getPlayerQuadrant()
+        if a[0] == 0:
+            x = 1
+        else:
+            x = 0
+        if a[1] == 0:
+            y = 1
+        else:
+            y = 0
+        return x, y
+
+    def getOpposingQuadrantCenterPixel(self):
+        nx, ny = self.getPlayerCoord()
+        qx, qy = self.getOpposingQuadrant()
+        x = int((nx + 0.25) * self.maze.tile_size_x + qx * self.maze.tile_size_x / 2)
+        y = int((ny + 0.25) * self.maze.tile_size_y + qy * self.maze.tile_size_y / 2)
+        return x, y
+
+    def Tick_second(self):
+        # passe a True chaque seconde
+        if self.timer > self.time_before_deblock:
+            return True
+        else:
+            return False
+
+
+
     def getSmallest_distance_rects(self, rect1, rect2):
         dist = lambda p1, p2: np.sqrt((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2)
 
@@ -235,10 +248,19 @@ class App_2(App):
             keys = pygame.key.get_pressed()
             self.on_keyboard_input(keys)
 
+
             # --- START IA INPUT ----
 
-            if self.fuzz_ctrl is not None:
+            if self.Tick_second():
+                if self.current_player_quadrant == self.getPlayerQuadrant():
+                    self.change_goal = True
+                else:
+                    self.change_goal = False
+                self.current_player_case = self.getPlayerQuadrant()
+                self.time_before_deblock = self.timer + 2
 
+
+            if self.fuzz_ctrl is not None:
                 # Let's try to get the obstacles :
                 # the 4 lists are [wall_list, obstacle_list, item_list, monster_list]
                 percept = self.maze.make_perception_list(self.player, self._display_surf)
@@ -261,19 +283,16 @@ class App_2(App):
                 if self.current_path and player_coord in self.current_path:
                     current_goal_index = self.current_path.index(player_coord)
                     case_goal = self.current_path[current_goal_index + (1 if current_goal_index != len(self.current_path) - 1 else 0 )]
-                    # next_case_right_or_left = case_goal[1] == current_case[1]
-                    # next_case_top_or_bottom = case_goal[0] == current_case[0]
-                    #
-                    # if next_case_right_or_left:
-                    #     gx = (case_goal[0]) * self.maze.tile_size_x
-                    #     gy = (case_goal[1] + 0.5) * self.maze.tile_size_y
-                    #
-                    # if next_case_top_or_bottom:
-                    #     gx = (case_goal[0]+ 0.5) * self.maze.tile_size_x
-                    #     gy = (case_goal[1]) * self.maze.tile_size_y
 
-                    gx = (case_goal[0] + 0.5) * self.maze.tile_size_x
-                    gy = (case_goal[1] + 0.5) * self.maze.tile_size_y
+                    if self.change_goal:
+                        gx,gy = self.getOpposingQuadrantCenterPixel()
+                        print('on change le goal a x = {}, y = {}'.format(gx,gy))
+
+                    else:
+                        gx = (case_goal[0] + 0.5) * self.maze.tile_size_x
+                        gy = (case_goal[1] + 0.5) * self.maze.tile_size_y
+
+
 
                 if len(percept[2]) != 0:  # If we percept something we set it as the goal
                     goal = percept[2][0]
