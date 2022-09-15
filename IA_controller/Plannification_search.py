@@ -47,7 +47,7 @@ class Plannificator:
 if __name__ == '__main__':
     setCorrectCHWD()
 
-    map_file_name='assets/mazeMedium_4'
+    map_file_name='assets/MazeLarge_2'
     theAPP = App_2(map_file_name)
     maze=theAPP.maze.maze
 

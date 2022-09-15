@@ -282,7 +282,7 @@ class App_2(App):
                     theta_prime = getAbsMax(alldev)
                     thethaG += theta_prime
 
-                    R = 2
+                    R = 3
                     self.Fx, self.Fy = self.Polar2Cart(R, thethaG)
                     self.doForce_X(self.Fx)
                     self.doForce_Y(self.Fy)
