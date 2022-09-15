@@ -1,7 +1,7 @@
 from queue import Queue
 
 from Constants import *
-from IA_controller.Helper_fun import setCorrectCHWD
+from IA_controller.Helper_fun import setCorrectCHWD, getMazeFromFile
 from IA_controller.PrologCom import PrologCom
 from IA_controller.visualizer import App_2
 from Fuzzy_logic import FuzzPlayer
@@ -14,6 +14,8 @@ class Plannificator:
         self.prolog_com=prolog_com
         self.neighborMap=prolog_com.getNeighborsMap()
         self.removedFromGoal=set()
+        self.blocked_node=set()
+        self.default_plan_fun=self.naivePlanification
 
     def getGoalFun(self,goal_type=['coin', 'treasure']):
         if type(goal_type) == list:
@@ -34,7 +36,7 @@ class Plannificator:
                 return True, current_path
 
             for neigh in self.neighborMap[current]:
-                if neigh not in visited:
+                if neigh not in visited and neigh not in self.blocked_node:
                     q.put((neigh,current_path+[neigh]))
 
         return False, []
@@ -43,18 +45,20 @@ class Plannificator:
         ok, path = self.bfs(playerPos, self.getGoalFun(goal_type))
         return path
 
+    def updateBlockedList(self,remove_from_blocked):
+        for node in remove_from_blocked :
+            if node in self.blocked_node :
+                self.blocked_node.remove(node)
 
 if __name__ == '__main__':
     setCorrectCHWD()
 
-    map_file_name='assets/MazeLarge_2'
-    theAPP = App_2(map_file_name)
-    maze=theAPP.maze.maze
-
+    map_file_name='assets/mazeMedium_4'
+    maze=getMazeFromFile(map_file_name)
     plannificator = Plannificator(PrologCom(maze))
-    #theAPP.setGoalTypes(['coin','treasure','exit'])
-    theAPP.setPlanFun(plannificator.naivePlanification)
-    theAPP.setPlannificator(plannificator)
+
+    theAPP = App_2(mazefile=map_file_name,plannificator=plannificator)
+
 
     ### Integration de fuzzy ###
     tile_size = (theAPP.maze.tile_size_x, theAPP.maze.tile_size_y)
@@ -63,13 +67,4 @@ if __name__ == '__main__':
     ### --- ###
 
     theAPP.on_execute()
-
-
-
-
-
-
-
-
-
 

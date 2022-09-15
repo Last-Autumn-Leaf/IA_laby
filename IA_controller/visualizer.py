@@ -3,30 +3,50 @@ import pygame
 
 from Constants import GAME_CLOCK, WHITE, GREEN, PERCEPTION_RADIUS
 from Games2D import App
-from IA_controller.Helper_fun import draw_rect_alpha
+from IA_controller.Helper_fun import draw_rect_alpha, getMonsterCoord
+from IA_controller.Train_genetic import GeneticTrainer
 
 
 class App_2(App):
-    def __init__(self, mazefile):
+    def __init__(self, mazefile,fuzz_ctrl=None,plannificator=None,goalTypes=['coin','treasure']):
         super().__init__(mazefile)
 
         self.FOLLOW_MOUSE = False
 
-        self.fuzz_ctrl = None
-        self.plannificator = None
-        self.plannificatorFun = None
+        # Fuzzy Logic
+        self.fuzz_ctrl = fuzz_ctrl
+
+        #Plannification
+        self.plannificator = plannificator
+        self.plannificatorFun = plannificator.default_plan_fun if plannificator is not None else None
         self.current_path = None
 
         self.Fx = 0
         self.Fy = 0
 
         self.vectors_to_show = []
-        self.goalTypes = ['coin', 'treasure']
+        self.goalTypes =goalTypes
         self.on_init()
         self.current_player_case = self.getPlayerCoord()
         self.treasure_coin_list_size= len(self.maze.treasureList + self.maze.coinList)
 
+        monsCoord=[ self.getCoordFromPix(mob.rect.center) for mob in self.maze.monsterList]
+
+        # De base on considère les monstres comme des nodes bloquées
+        if plannificator is not None :
+            plannificator.blocked_node = set(monsCoord)
+
+        # Genetic Trainer va nous dire quels monstres sont battus dynamiquement
+        self.GT = GeneticTrainer(self.maze.monsterList,monsCoord)
+        #self.reTrainGT()
+
     getRadius = lambda self, size: np.sqrt(size[0] ** 2 + size[1] ** 2)
+
+    def reTrainGT(self):
+        if self.GT.train(500) :
+            if self.plannificator is not None :
+                self.plannificator.blocked_node.clear()
+            print("All monster Beatten !")
 
     def on_render(self):
         self.maze_render()
@@ -194,6 +214,7 @@ class App_2(App):
             # --- START IA INPUT ----
 
             if self.fuzz_ctrl is not None:
+
                 # Let's try to get the obstacles :
                 # the 4 lists are [wall_list, obstacle_list, item_list, monster_list]
                 percept = self.maze.make_perception_list(self.player, self._display_surf)
@@ -229,8 +250,6 @@ class App_2(App):
 
                     gx = (case_goal[0] + 0.5) * self.maze.tile_size_x
                     gy = (case_goal[1] + 0.5) * self.maze.tile_size_y
-
-
 
                 if len(percept[2]) != 0:  # If we percept something we set it as the goal
                     goal = percept[2][0]
@@ -298,7 +317,19 @@ class App_2(App):
                 self.plannificator.removedFromGoal.add(goal_coord)
                 self.current_path = self.plannificatorFun(self.getPlayerCoord(), self.goalTypes)
                 if len(self.current_path)==0 :
-                    self.current_path = self.plannificatorFun(self.getPlayerCoord(), ['exit'])
+                    if not self.GT.isAllMobsBeatten() :
+                        self.reTrainGT()
+                        self.plannificator.updateBlockedList(self.GT.getBeattenMonsterCoord())
+                        self.current_path = self.plannificatorFun(self.getPlayerCoord(), self.goalTypes)
+                    else :
+                        self.current_path = self.plannificatorFun(self.getPlayerCoord(), ['exit'])
+
+            # Check monster collision :
+            monster = self.on_monster_collision()
+            if monster:
+                attr = self.GT.get_attributeFrom_Mons(monster)
+                if attr is not None:
+                    self.player.set_attributes(attr)
 
             if self.on_coin_collision():
                 self.score += 1

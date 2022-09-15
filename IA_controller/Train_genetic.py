@@ -3,10 +3,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 from Constants import *
 from IA_controller.Helper_fun import setCorrectCHWD, getMonsterCoord
-from IA_controller.visualizer import App_2
 from Player import Player
 import random
-POP_SIZE = 3
+POP_SIZE = 10
 
 create_random_attribute = lambda: [random.randrange(-MAX_ATTRIBUTE, MAX_ATTRIBUTE) for i in range(NUM_ATTRIBUTES)]
 
@@ -74,7 +73,6 @@ class MonsterOrganizer:
             self.d_val[i]= bintodec(attr)
 
     def doSelection(self):
-
         indexes_prob = np.random.rand(POP_SIZE)
         roulette = [0] * POP_SIZE
         cpt = 0
@@ -171,12 +169,27 @@ class MonsterOrganizer:
         self.dummy.attributes=attr
         return self.monsterObject.mock_fight(self.dummy)
 
-class genetic_trainer:
+class GeneticTrainer:
     def __init__(self,monsterList,monsterCoord):
         self.monster_list=[ MonsterOrganizer(m,pos) for m,pos in zip(monsterList,monsterCoord)]
+        self.monster_coord=monsterCoord
+
+
+    def train(self,gen):
+        for i,mob in enumerate(self.monster_list ):
+            if not mob :
+                for j in range(gen) :
+                    mob.do_step()
+                    mob.new_gen()
+        return self.isAllMobsBeatten()
+
+    def isAllMobsBeatten (self) :
+        for i,mob in enumerate(self.monster_list ):
+            if not mob :
+                return False
+        return True
 
     def test(self):
-
         for i,mob in enumerate(self.monster_list ):
             for j in range(100) :
                 mob.do_step()
@@ -187,18 +200,39 @@ class genetic_trainer:
             print(mob)
             plt.show()
 
+    def getBeattenMonsterCoord(self):
+        monster_set=set()
+        for i, mob in enumerate(self.monster_list):
+            if mob :
+                monster_set.add(mob.pos)
+        return monster_set
+
+    def get_attributeFrom_coord(self,coord):
+        # check if monster is beatten
+        for i, mob in enumerate(self.monster_list):
+            if mob.pos ==coord :
+                if mob :
+                    return mob[0]
+                else :
+                    return None
+        return None
+
+    def get_attributeFrom_Mons(self,mons):
+        # check if monster is beatten
+        for i, mob in enumerate(self.monster_list):
+            if mob.monsterObject==mons :
+                if mob :
+                    return mob[0]
+                else :
+                    return None # Not beatten
+        return None # Not in the list ??
+
 
 
 if __name__ == '__main__':
     #random.seed(0)
     #np.random.seed(0)
     setCorrectCHWD()
-    map_file_name='assets/test_Map'
-    theAPP = App_2(map_file_name)
-    theAPP.on_init()
-    GT=genetic_trainer(theAPP.maze.monsterList,getMonsterCoord(theAPP.maze.maze))
-    GT.test()
-
 
 
     #theAPP.on_execute()
