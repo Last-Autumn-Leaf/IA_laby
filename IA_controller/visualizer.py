@@ -3,50 +3,30 @@ import pygame
 
 from Constants import GAME_CLOCK, WHITE, GREEN, PERCEPTION_RADIUS
 from Games2D import App
-from IA_controller.Helper_fun import draw_rect_alpha, getMonsterCoord
-from IA_controller.Train_genetic import GeneticTrainer
+from IA_controller.Helper_fun import draw_rect_alpha
 
 
 class App_2(App):
-    def __init__(self, mazefile,fuzz_ctrl=None,plannificator=None,goalTypes=['coin','treasure']):
+    def __init__(self, mazefile):
         super().__init__(mazefile)
 
         self.FOLLOW_MOUSE = False
 
-        # Fuzzy Logic
-        self.fuzz_ctrl = fuzz_ctrl
-
-        #Plannification
-        self.plannificator = plannificator
-        self.plannificatorFun = plannificator.default_plan_fun if plannificator is not None else None
+        self.fuzz_ctrl = None
+        self.plannificator = None
+        self.plannificatorFun = None
         self.current_path = None
 
         self.Fx = 0
         self.Fy = 0
 
         self.vectors_to_show = []
-        self.goalTypes =goalTypes
+        self.goalTypes = ['coin', 'treasure']
         self.on_init()
         self.current_player_case = self.getPlayerCoord()
         self.treasure_coin_list_size= len(self.maze.treasureList + self.maze.coinList)
 
-        monsCoord=[ self.getCoordFromPix(mob.rect.center) for mob in self.maze.monsterList]
-
-        # De base on considère les monstres comme des nodes bloquées
-        if plannificator is not None :
-            plannificator.blocked_node = set(monsCoord)
-
-        # Genetic Trainer va nous dire quels monstres sont battus dynamiquement
-        self.GT = GeneticTrainer(self.maze.monsterList,monsCoord)
-        #self.reTrainGT()
-
     getRadius = lambda self, size: np.sqrt(size[0] ** 2 + size[1] ** 2)
-
-    def reTrainGT(self):
-        if self.GT.train(500) :
-            if self.plannificator is not None :
-                self.plannificator.blocked_node.clear()
-            print("All monster Beatten !")
 
     def on_render(self):
         self.maze_render()
@@ -81,8 +61,30 @@ class App_2(App):
                     draw_rect_alpha(display_surf, color, (x * tile_size_x, y * tile_size_y, tile_size_x, tile_size_y))
 
     getCoordFromPix= lambda self,coord : (int(coord[0] / self.maze.tile_size_x),int(coord[1] / self.maze.tile_size_y))
+
+    getCoordQuadrantFromPix= lambda self,coord : (int(((coord[0] / self.maze.tile_size_x) % 1) / 0.5), int(((coord[1] / self.maze.tile_size_y) % 1) / 0.5))
+
     def getPlayerCoord(self):
         return self.getCoordFromPix(self.player.get_rect().center)
+    def getPlayerQuadrant(self):
+        return self.getCoordQuadrantFromPix(self.player.get_rect().center)
+    def getOpposingQuadrant(self):
+        a = self.getPlayerQuadrant()
+        if a[0] == 0:
+            x = 1
+        else:
+            x = 0
+        if a[1] == 0:
+            y = 1
+        else:
+            y = 0
+        return x, y
+    def getOpposingQuadrantCenterPixel(self):
+        nx, ny = self.getPlayerCoord()
+        qx, qy = self.getOpposingQuadrant()
+        x = int((nx+0.25) * self.maze.tile_size_x + qx * self.maze.tile_size_x / 2)
+        y = int((ny+0.25) * self.maze.tile_size_y + qy * self.maze.tile_size_y / 2)
+        return x, y
 
     def setPlannificator(self, plannificator):
         self.plannificator = plannificator
@@ -211,10 +213,11 @@ class App_2(App):
             keys = pygame.key.get_pressed()
             self.on_keyboard_input(keys)
 
+            print(self.getOpposingQuadrantCenterPixel())
+
             # --- START IA INPUT ----
 
             if self.fuzz_ctrl is not None:
-
                 # Let's try to get the obstacles :
                 # the 4 lists are [wall_list, obstacle_list, item_list, monster_list]
                 percept = self.maze.make_perception_list(self.player, self._display_surf)
@@ -250,6 +253,8 @@ class App_2(App):
 
                     gx = (case_goal[0] + 0.5) * self.maze.tile_size_x
                     gy = (case_goal[1] + 0.5) * self.maze.tile_size_y
+
+
 
                 if len(percept[2]) != 0:  # If we percept something we set it as the goal
                     goal = percept[2][0]
@@ -317,19 +322,7 @@ class App_2(App):
                 self.plannificator.removedFromGoal.add(goal_coord)
                 self.current_path = self.plannificatorFun(self.getPlayerCoord(), self.goalTypes)
                 if len(self.current_path)==0 :
-                    if not self.GT.isAllMobsBeatten() :
-                        self.reTrainGT()
-                        self.plannificator.updateBlockedList(self.GT.getBeattenMonsterCoord())
-                        self.current_path = self.plannificatorFun(self.getPlayerCoord(), self.goalTypes)
-                    else :
-                        self.current_path = self.plannificatorFun(self.getPlayerCoord(), ['exit'])
-
-            # Check monster collision :
-            monster = self.on_monster_collision()
-            if monster:
-                attr = self.GT.get_attributeFrom_Mons(monster)
-                if attr is not None:
-                    self.player.set_attributes(attr)
+                    self.current_path = self.plannificatorFun(self.getPlayerCoord(), ['exit'])
 
             if self.on_coin_collision():
                 self.score += 1
