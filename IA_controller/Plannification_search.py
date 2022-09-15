@@ -13,6 +13,7 @@ class Plannificator:
 
         self.prolog_com=prolog_com
         self.neighborMap=prolog_com.getNeighborsMap()
+        self.removedFromGoal=set()
 
     def getGoalFun(self,goal_type=['coin', 'treasure']):
         if type(goal_type) == list:
@@ -29,7 +30,7 @@ class Plannificator:
         while (not q.empty()):
             current,current_path = q.get()
             visited.add(current)
-            if goal_function(current):
+            if current not in self.removedFromGoal and goal_function(current) :
                 return True, current_path
 
             for neigh in self.neighborMap[current]:
@@ -51,8 +52,9 @@ if __name__ == '__main__':
     maze=theAPP.maze.maze
 
     plannificator = Plannificator(PrologCom(maze))
-    theAPP.setGoalTypes(['treasure','exit'])
+    #theAPP.setGoalTypes(['coin','treasure','exit'])
     theAPP.setPlanFun(plannificator.naivePlanification)
+    theAPP.setPlannificator(plannificator)
 
     ### Integration de fuzzy ###
     tile_size = (theAPP.maze.tile_size_x, theAPP.maze.tile_size_y)
