@@ -21,9 +21,10 @@ class App_2(App):
         self.Fy = 0
 
         self.vectors_to_show = []
-        self.goalTypes = ['coin', 'treasure', 'exit']
+        self.goalTypes = ['coin', 'treasure']
         self.on_init()
         self.current_player_case = self.getPlayerCoord()
+        self.treasure_coin_list_size= len(self.maze.treasureList + self.maze.coinList)
 
     getRadius = lambda self, size: np.sqrt(size[0] ** 2 + size[1] ** 2)
 
@@ -59,12 +60,9 @@ class App_2(App):
                 if start_lever:
                     draw_rect_alpha(display_surf, color, (x * tile_size_x, y * tile_size_y, tile_size_x, tile_size_y))
 
+    getCoordFromPix= lambda self,coord : (int(coord[0] / self.maze.tile_size_x),int(coord[1] / self.maze.tile_size_y))
     def getPlayerCoord(self):
-        # coordonates are reversed !!!
-        x, y = self.player.get_rect().center
-        x = int(x / self.maze.tile_size_x)
-        y = int(y / self.maze.tile_size_y)
-        return (x, y)
+        return self.getCoordFromPix(self.player.get_rect().center)
 
     def setPlannificator(self, plannificator):
         self.plannificator = plannificator
@@ -157,9 +155,11 @@ class App_2(App):
 
     def check_goal_reach(self):
         collide_index = self.player.get_rect().collidelist(self.maze.coinList)
-        if not collide_index == -1: return True;
+        if not collide_index == -1:
+            return  self.getCoordFromPix(self.maze.coinList[collide_index].center)
         collide_index = self.player.get_rect().collidelist(self.maze.treasureList)
-        if not collide_index == -1: return True
+        if not collide_index == -1:
+            return self.getCoordFromPix(self.maze.treasureList[collide_index].center)
         return False;
 
     def on_execute(self):
@@ -237,7 +237,7 @@ class App_2(App):
                     gy = goal.centery
                     gx = goal.centerx
 
-                elif len(percept[2]) == 0 and gx is None:
+                elif len(percept[2]) == 0 and gx is None and self.plannificator is None :
                     # get goal from coin List or Treasure List or exit
                     if len(self.maze.coinList) > 0:
                         gx = self.maze.coinList[0].centerx
@@ -293,8 +293,9 @@ class App_2(App):
             #     self.current_path = self.plannificatorFun(self.getPlayerCoord(), self.goalTypes)
 
             # check if we collide with target :
-            if self.check_goal_reach():
-                self.plannificator.removedFromGoal.add(self.getPlayerCoord())
+            goal_coord=self.check_goal_reach()
+            if goal_coord:
+                self.plannificator.removedFromGoal.add(goal_coord)
                 self.current_path = self.plannificatorFun(self.getPlayerCoord(), self.goalTypes)
 
             if self.on_coin_collision():
