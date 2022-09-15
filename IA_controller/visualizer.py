@@ -42,6 +42,31 @@ class App_2(App):
 
     getRadius = lambda self, size: np.sqrt(size[0] ** 2 + size[1] ** 2)
 
+    getCoordQuadrantFromPix = lambda self, coord: (int(((coord[0] / self.maze.tile_size_x) % 1) / 0.5), int(((coord[1] / self.maze.tile_size_y) % 1) / 0.5))
+    getCoordFromPix = lambda self, coord: (int(coord[0] / self.maze.tile_size_x), int(coord[1] / self.maze.tile_size_y))
+
+    def getPlayerQuadrant(self):
+        return self.getCoordQuadrantFromPix(self.player.get_rect().center)
+
+    def getOpposingQuadrant(self):
+        a = self.getPlayerQuadrant()
+        if a[0] == 0:
+            x = 1
+        else:
+            x = 0
+        if a[1] == 0:
+            y = 1
+        else:
+            y = 0
+        return x, y
+
+    def getOpposingQuadrantCenterPixel(self):
+        nx, ny = self.getPlayerCoord()
+        qx, qy = self.getOpposingQuadrant()
+        x = int((nx + 0.25) * self.maze.tile_size_x + qx * self.maze.tile_size_x / 2)
+        y = int((ny + 0.25) * self.maze.tile_size_y + qy * self.maze.tile_size_y / 2)
+        return x, y
+
     def reTrainGT(self):
         if self.GT.train(500) :
             if self.plannificator is not None :
@@ -80,7 +105,6 @@ class App_2(App):
                 if start_lever:
                     draw_rect_alpha(display_surf, color, (x * tile_size_x, y * tile_size_y, tile_size_x, tile_size_y))
 
-    getCoordFromPix= lambda self,coord : (int(coord[0] / self.maze.tile_size_x),int(coord[1] / self.maze.tile_size_y))
     def getPlayerCoord(self):
         return self.getCoordFromPix(self.player.get_rect().center)
 
