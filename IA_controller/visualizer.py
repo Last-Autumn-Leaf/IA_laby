@@ -215,22 +215,22 @@ class App_2(App):
                 # if we have a current path we set the goal as the next coordinate of the player
                 if self.current_path and player_coord in self.current_path:
                     current_goal_index = self.current_path.index(player_coord)
-                    if current_goal_index != len(self.current_path) - 1:
-                        if current_goal_index is not None and current_goal_index != len(self.current_path):
-                            case_goal = self.current_path[current_goal_index + 1]
-                            # next_case_right_or_left = case_goal[1] == current_case[1]
-                            # next_case_top_or_bottom = case_goal[0] == current_case[0]
-                            #
-                            # if next_case_right_or_left:
-                            #     gx = (case_goal[0]) * self.maze.tile_size_x
-                            #     gy = (case_goal[1] + 0.5) * self.maze.tile_size_y
-                            #
-                            # if next_case_top_or_bottom:
-                            #     gx = (case_goal[0]+ 0.5) * self.maze.tile_size_x
-                            #     gy = (case_goal[1]) * self.maze.tile_size_y
+                    case_goal = self.current_path[current_goal_index + (1 if current_goal_index != len(self.current_path) - 1 else 0 )]
+                    # next_case_right_or_left = case_goal[1] == current_case[1]
+                    # next_case_top_or_bottom = case_goal[0] == current_case[0]
+                    #
+                    # if next_case_right_or_left:
+                    #     gx = (case_goal[0]) * self.maze.tile_size_x
+                    #     gy = (case_goal[1] + 0.5) * self.maze.tile_size_y
+                    #
+                    # if next_case_top_or_bottom:
+                    #     gx = (case_goal[0]+ 0.5) * self.maze.tile_size_x
+                    #     gy = (case_goal[1]) * self.maze.tile_size_y
 
-                            gx = (case_goal[0] + 0.5) * self.maze.tile_size_x
-                            gy = (case_goal[1] + 0.5) * self.maze.tile_size_y
+                    gx = (case_goal[0] + 0.5) * self.maze.tile_size_x
+                    gy = (case_goal[1] + 0.5) * self.maze.tile_size_y
+
+
 
                 if len(percept[2]) != 0:  # If we percept something we set it as the goal
                     goal = percept[2][0]
@@ -282,7 +282,7 @@ class App_2(App):
                     theta_prime = getAbsMax(alldev)
                     thethaG += theta_prime
 
-                    R = 3
+                    R = 2
                     self.Fx, self.Fy = self.Polar2Cart(R, thethaG)
                     self.doForce_X(self.Fx)
                     self.doForce_Y(self.Fy)
@@ -297,6 +297,8 @@ class App_2(App):
             if goal_coord:
                 self.plannificator.removedFromGoal.add(goal_coord)
                 self.current_path = self.plannificatorFun(self.getPlayerCoord(), self.goalTypes)
+                if len(self.current_path)==0 :
+                    self.current_path = self.plannificatorFun(self.getPlayerCoord(), ['exit'])
 
             if self.on_coin_collision():
                 self.score += 1
