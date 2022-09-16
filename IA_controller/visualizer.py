@@ -142,8 +142,8 @@ class App_2(App):
                 if (x, y) == player_coord: start_lever = True;
                 if start_lever:
                     draw_rect_alpha(display_surf, color, (x * tile_size_x, y * tile_size_y, tile_size_x, tile_size_y))
-            for x,y in self.plannificator.blocked_node  :
-                pygame.draw.rect(display_surf, RED,(x * tile_size_x, y * tile_size_y, tile_size_x, tile_size_y),width=1)
+        for x,y in self.plannificator.blocked_node  :
+            pygame.draw.rect(display_surf, RED,(x * tile_size_x, y * tile_size_y, tile_size_x, tile_size_y),width=1)
 
 
     # ----------- FUZZY PART ----------
@@ -314,6 +314,7 @@ class App_2(App):
                 return (gx,gy)
             else :
                 self.current_path =self.plannificatorFun(self.getPlayerCoord(), self.goalTypes)
+                self.current_player_case=self.getPlayerCoord()
                 return self.getGoalFromPath()
 
     def update_player_case(self):
@@ -335,9 +336,11 @@ class App_2(App):
 
             elif self.current_player_case == self.previous_player_case and self.blocked_index ==2: # case bloquante !!
                 if self.current_player_case in self.current_path :
+
                     current_goal_index = self.current_path.index(self.current_player_case)
                     next_case_goal = self.current_path[current_goal_index + (1 if current_goal_index != len(self.current_path)-1 else 0)]
                     self.plannificator.blocked_node.add(next_case_goal)
+
                     self.current_path = self.plannificatorFun(self.current_player_case, self.goalTypes)
                     self.current_goal = self.getGoalFromPath()
                     self.blocked_index = 0
