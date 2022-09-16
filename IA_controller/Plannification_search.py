@@ -1,10 +1,10 @@
 from queue import Queue
 
-from Constants import *
+from IA_controller.Fuzzy_logic import FuzzPlayer
 from IA_controller.Helper_fun import setCorrectCHWD, getMazeFromFile
 from IA_controller.PrologCom import PrologCom
 from IA_controller.visualizer import App_2
-from Fuzzy_logic import FuzzPlayer
+
 
 
 class Plannificator:
@@ -53,24 +53,17 @@ class Plannificator:
 if __name__ == '__main__':
     setCorrectCHWD()
 
-    map_file_name='assets/MazeLarge_3'
+    map_file_name='assets/test_map_plan'
     maze=getMazeFromFile(map_file_name)
     plannificator = Plannificator(PrologCom(maze))
 
     theAPP = App_2(mazefile=map_file_name,plannificator=plannificator)
-
 
     ### Integration de fuzzy ###
     tile_size = (theAPP.maze.tile_size_x, theAPP.maze.tile_size_y)
     fuzz_ctrl = FuzzPlayer(tile_size)
     theAPP.setFuzzCtrl(fuzz_ctrl)
     ### --- ###
-
-    # SHOW_VARIABLE = True
-    # if SHOW_VARIABLE:
-    #     for var in fuzz_ctrl.sim.ctrl.fuzzy_variables:
-    #         var.view()
-    #     plt.show()
 
     theAPP.on_execute()
 

@@ -1,12 +1,7 @@
-wall(0,0).		start(1,0).		wall(2,0).		wall(3,0).		wall(4,0).		wall(5,0).		
-wall(0,1).		empty(1,1).		wall(2,1).		wall(3,1).		wall(4,1).		wall(5,1).		
-wall(0,2).		empty(1,2).		wall(2,2).		wall(3,2).		wall(4,2).		wall(5,2).		
-wall(0,3).		coin(1,3).		wall(2,3).		wall(3,3).		wall(4,3).		wall(5,3).		
-wall(0,4).		empty(1,4).		wall(2,4).		wall(3,4).		wall(4,4).		wall(5,4).		
-wall(0,5).		obstacle(1,5).		wall(2,5).		wall(3,5).		wall(4,5).		wall(5,5).		
-wall(0,6).		empty(1,6).		wall(2,6).		wall(3,6).		wall(4,6).		wall(5,6).		
-wall(0,7).		coin(1,7).		wall(2,7).		wall(3,7).		wall(4,7).		wall(5,7).		
-wall(0,8).		exit(1,8).		wall(2,8).		wall(3,8).		wall(4,8).		wall(5,8).		
+wall(0,0).		start(1,0).		empty(2,0).		empty(3,0).		monster(4,0).		wall(5,0).		
+wall(0,1).		empty(1,1).		obstacle(2,1).		obstacle(3,1).		coin(4,1).		monster(5,1).		
+wall(0,2).		coin(1,2).		empty(2,2).		obstacle(3,2).		empty(4,2).		monster(5,2).		
+wall(0,3).		wall(1,3).		empty(2,3).		empty(3,3).		exit(4,3).		monster(5,3).		
 adjacent(X1,Y1,X2,Y2):- (( Y2 is Y1+1 ; Y2 is Y1-1 ), X2 is X1); (( X2 is X1+1 ; X2 is X1-1 ), Y2 is Y1).
-invalid(X,Y):- X<0;X>=6;Y<0;Y>=9.
+invalid(X,Y):- X<0;X>=6;Y<0;Y>=4.
 action(X1,Y1,X2,Y2) :- not(wall(X1,Y1)),adjacent(X1,Y1,X2,Y2),not(wall(X2,Y2)),not(invalid(X2,Y2)).

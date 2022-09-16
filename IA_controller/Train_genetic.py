@@ -1,10 +1,13 @@
 import math
 import matplotlib.pyplot as plt
 import numpy as np
+import pygame
+
 from Constants import *
 from IA_controller.Helper_fun import setCorrectCHWD, getMonsterCoord
 from Player import Player
 import random
+from Monster import  *
 POP_SIZE = 10
 
 create_random_attribute = lambda: [random.randrange(-MAX_ATTRIBUTE, MAX_ATTRIBUTE) for i in range(NUM_ATTRIBUTES)]
@@ -225,4 +228,14 @@ class GeneticTrainer:
         return gen_list
 
 
-
+if __name__ == '__main__':
+    setCorrectCHWD()
+    n_monster= 3
+    monster_list=[]
+    monster_coord=[]
+    for i in range(n_monster):
+        new_monster = pygame.Rect((i,1,2,3))
+        monster_list.append(Monster(new_monster))
+        monster_coord.append((i,i))
+    GT = GeneticTrainer(monster_list,monster_coord)
+    GT.test()

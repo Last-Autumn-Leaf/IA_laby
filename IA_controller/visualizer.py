@@ -52,7 +52,7 @@ class App_2(App):
         if self.GT.train(500) :
             if self.plannificator is not None :
                 self.plannificator.blocked_node.clear()
-                print("All monster Beatten !")
+            print("All monster Beatten !")
         elif  self.plannificator is not None :
             self.plannificator.updateBlockedList(self.GT.getBeattenMonsterCoord())
             print("num list =",self.GT.get_gen())
@@ -142,8 +142,9 @@ class App_2(App):
                 if (x, y) == player_coord: start_lever = True;
                 if start_lever:
                     draw_rect_alpha(display_surf, color, (x * tile_size_x, y * tile_size_y, tile_size_x, tile_size_y))
-        for x,y in self.plannificator.blocked_node  :
-            pygame.draw.rect(display_surf, RED,(x * tile_size_x, y * tile_size_y, tile_size_x, tile_size_y),width=1)
+        if self.plannificator :
+            for x,y in self.plannificator.blocked_node  :
+                pygame.draw.rect(display_surf, RED,(x * tile_size_x, y * tile_size_y, tile_size_x, tile_size_y),width=1)
 
 
     # ----------- FUZZY PART ----------
@@ -365,32 +366,33 @@ class App_2(App):
             keys = pygame.key.get_pressed()
             self.on_keyboard_input(keys)
 
+            self.vectors_to_show.clear()
+            allObs = self.get_obstacles()
+            if self.plannificator :
+                if len(self.current_path)==0 and not self.GT.isAllMobsBeatten():
+                        print("retraining Player")
+                        self.reTrainGT()
+                        self.current_path = self.plannificatorFun(self.current_player_case, self.goalTypes)
+                else :
+                    self.unblock_player()
 
-            if len(self.current_path)==0 and not self.GT.isAllMobsBeatten():
-                    print("retraining Player")
-                    self.reTrainGT()
-                    self.current_path = self.plannificatorFun(self.current_player_case, self.goalTypes)
-            else :
-                self.unblock_player()
+
+                if self.fuzz_ctrl is not None:
 
 
-            if self.fuzz_ctrl is not None:
-                self.vectors_to_show.clear()
-                allObs=self.get_obstacles()
+                    # --- START IA INPUT ----
+                    if self.NextCaseDetector(): # IF we detect a change of case we change the recompute the goal
+                        self.update_player_case()
+                        self.current_goal = self.getGoalFromPath()
 
-                # --- START IA INPUT ----
-                if self.NextCaseDetector(): # IF we detect a change of case we change the recompute the goal
-                    self.update_player_case()
-                    self.current_goal = self.getGoalFromPath()
-
-                self.doFuzzy(allObs)
+                    self.doFuzzy(allObs)
 
             # --- END IA OUTPUT ----
 
             # ------ Collision check
             # check if we collide with GOAL :
             goal_coord=self.check_goal_reach()
-            if goal_coord:
+            if goal_coord and self.plannificator:
                 self.plannificator.removedFromGoal.add(goal_coord)
                 self.current_path = self.plannificatorFun(self.current_player_case, self.goalTypes)
                 self.current_goal = self.getGoalFromPath()
@@ -409,9 +411,9 @@ class App_2(App):
             # Check monster collision :
             monster = self.on_monster_collision()
             if monster:
-                attr = self.GT.get_attributeFrom_Mons(monster)
-                if attr is not None:
-                    self.player.set_attributes(attr)
+                    attr = self.GT.get_attributeFrom_Mons(monster)
+                    if attr is not None:
+                        self.player.set_attributes(attr)
             # -------- END
 
             if self.on_coin_collision():
@@ -462,8 +464,5 @@ if __name__ == '__main__':
     map_file_name='assets/MazeLarge_3'
     theAPP = App_2(map_file_name)
     theAPP.on_init()
-    GT = GeneticTrainer(theAPP.maze.monsterList, getMonsterCoord(theAPP.maze.maze))
-    GT.test()
-
-    #theAPP.on_execute()
+    theAPP.on_execute()
 
