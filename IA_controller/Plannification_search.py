@@ -53,7 +53,7 @@ class Plannificator:
 if __name__ == '__main__':
     setCorrectCHWD()
 
-    map_file_name='assets/mazeMedium_4'
+    map_file_name='assets/MazeLarge_3'
     maze=getMazeFromFile(map_file_name)
     plannificator = Plannificator(PrologCom(maze))
 
@@ -61,9 +61,9 @@ if __name__ == '__main__':
 
 
     ### Integration de fuzzy ###
-    # tile_size = (theAPP.maze.tile_size_x, theAPP.maze.tile_size_y)
-    # fuzz_ctrl = FuzzPlayer(tile_size)
-    # theAPP.setFuzzCtrl(fuzz_ctrl)
+    tile_size = (theAPP.maze.tile_size_x, theAPP.maze.tile_size_y)
+    fuzz_ctrl = FuzzPlayer(tile_size)
+    theAPP.setFuzzCtrl(fuzz_ctrl)
     ### --- ###
 
     theAPP.on_execute()

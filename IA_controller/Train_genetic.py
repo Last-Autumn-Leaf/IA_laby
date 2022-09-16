@@ -230,8 +230,7 @@ class GeneticTrainer:
 
 
 if __name__ == '__main__':
-    #random.seed(0)
-    #np.random.seed(0)
+
     setCorrectCHWD()
 
 

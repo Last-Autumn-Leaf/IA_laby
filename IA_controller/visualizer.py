@@ -11,8 +11,6 @@ class App_2(App):
     def __init__(self, mazefile,fuzz_ctrl=None,plannificator=None,goalTypes=['coin','treasure']):
         super().__init__(mazefile)
 
-        self.FOLLOW_MOUSE = False
-
         # Fuzzy Logic
         self.fuzz_ctrl = fuzz_ctrl
 
@@ -42,26 +40,83 @@ class App_2(App):
 
         # Genetic Trainer va nous dire quels monstres sont battus dynamiquement
         self.GT = GeneticTrainer(self.maze.monsterList,monsCoord)
-        #self.reTrainGT()
+        self.reTrainGT()
 
     getRadius = lambda self, size: np.sqrt(size[0] ** 2 + size[1] ** 2)
-
     getCoordQuadrantFromPix = lambda self, coord: (int(((coord[0] / self.maze.tile_size_x) % 1) / 0.5), int(((coord[1] / self.maze.tile_size_y) % 1) / 0.5))
     getCoordFromPix = lambda self, coord: (int(coord[0] / self.maze.tile_size_x), int(coord[1] / self.maze.tile_size_y))
+    getPlayerCoord = lambda  self : self.getCoordFromPix(self.player.get_rect().center)
 
     def reTrainGT(self):
         if self.GT.train(500) :
             if self.plannificator is not None :
                 self.plannificator.blocked_node.clear()
-            print("All monster Beatten !")
+                print("All monster Beatten !")
+            else :
+                self.plannificator.updateBlockedList(self.GT.getBeattenMonsterCoord())
 
+    #  ---------- Math FUNCTIONS ------------- :
+    def fix_angle(self, a):
+        if a >= np.pi:
+            a -= 2 * np.pi
+        elif a < -np.pi:
+            a += 2 * np.pi
+        return a
+    def getAbsMax(self, a):
+        abs_max = a[0]
+        for i in a:
+            if abs(abs_max) < abs(i):
+                abs_max = i
+        return abs_max
+    def cart2Polar(self, x, y):
+        r = np.sqrt(x ** 2 + y ** 2)
+        theta = np.arctan2(y, x)
+        return r, theta
+    def Polar2Cart(self, r, theta):
+        x = r * np.cos(theta)
+        y = r * np.sin(theta)
+        return x, y
+    def getSmallest_distance_rects(self, rect1, rect2):
+        dist = lambda p1, p2: np.sqrt((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2)
+
+        if rect1 is None:
+            return PERCEPTION_RADIUS * self.getRadius((self.maze.tile_size_x, self.maze.tile_size_y))
+
+        (x1, y1) = rect1.topleft
+        (x1b, y1b) = rect1.bottomright
+        (x2, y2) = rect2.topleft
+        (x2b, y2b) = rect2.bottomright
+
+        left = x2b < x1
+        right = x1b < x2
+        bottom = y2b < y1
+        top = y1b < y2
+        if top and left:
+            return dist((x1, y1b), (x2b, y2))
+        elif left and bottom:
+            return dist((x1, y1), (x2b, y2b))
+        elif bottom and right:
+            return dist((x1b, y1), (x2, y2b))
+        elif right and top:
+            return dist((x1b, y1b), (x2, y2))
+        elif left:
+            return x1 - x2b
+        elif right:
+            return x2 - x1b
+        elif bottom:
+            return y1 - y2b
+        elif top:
+            return y2 - y1b
+        else:  # rectangles intersect
+            return 0.
+
+    # ---------- VISUALISATION FUNCTIONS ----------- :
     def on_render(self):
         self.maze_render()
         self.draw_current_path()
         self.draw_vectors()
         self._display_surf.blit(self._image_surf, (self.player.x, self.player.y))
         pygame.display.flip()
-
     def draw_vectors(self):
         display_surf = self._display_surf
         player_pos = self.player.get_rect().center
@@ -74,49 +129,25 @@ class App_2(App):
         # Draw Force Vector
         pygame.draw.line(display_surf, GREEN, player_pos,
                          (player_pos[0] + int(30 * self.Fx), player_pos[1] + int(30 * self.Fy)))
-
     def draw_current_path(self, color=(0, 255, 0, 70)):
         display_surf = self._display_surf
         tile_size_x = self.maze.tile_size_x
         tile_size_y = self.maze.tile_size_y
         if self.current_path is not None:
             start_lever = False
-            player_coord = self.getPlayerCoord()
+            player_coord = self.current_player_case
             for x, y in self.current_path:
                 if (x, y) == player_coord: start_lever = True;
                 if start_lever:
                     draw_rect_alpha(display_surf, color, (x * tile_size_x, y * tile_size_y, tile_size_x, tile_size_y))
 
-    def getPlayerCoord(self):
-        return self.getCoordFromPix(self.player.get_rect().center)
-
-    def setPlannificator(self, plannificator):
-        self.plannificator = plannificator
-
-    def setPlanFun(self, planFun):
-        self.plannificatorFun = planFun
-
-    def setGoalTypes(self, goalTypes):
-        self.goalTypes = goalTypes
-
-    def setFuzzCtrl(self, fuzz_ctrl):
-        self.fuzz_ctrl = fuzz_ctrl
-
-    def cart2Polar(self, x, y):
-        r = np.sqrt(x ** 2 + y ** 2)
-        theta = np.arctan2(y, x)
-        return r, theta
-
-    def Polar2Cart(self, r, theta):
-        x = r * np.cos(theta)
-        y = r * np.sin(theta)
-        return x, y
-
+    # ----------- FUZZY PART ----------
     def doForce_Y(self, force):
         if force < 0:
             force = np.floor(force)
         else:
             force = np.ceil(force)
+
         force = int(force)
         for i in range(abs(force)):
 
@@ -124,7 +155,6 @@ class App_2(App):
                 self.on_AI_input('DOWN')
             else:
                 self.on_AI_input('UP')
-
     def doForce_X(self, force):
         if force < 0:
             force = np.floor(force)
@@ -140,7 +170,6 @@ class App_2(App):
     def NextCaseDetector(self):
         # renvoie false si joueur a pas change
         # renvoie true si joueur a change
-
         player_rect = self.player.get_rect()
         topleft_corner_player = player_rect.topleft
         bottomright_corner_player = player_rect.bottomright
@@ -196,41 +225,6 @@ class App_2(App):
             return False
 
 
-
-    def getSmallest_distance_rects(self, rect1, rect2):
-        dist = lambda p1, p2: np.sqrt((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2)
-
-        if rect1 is None:
-            return PERCEPTION_RADIUS * self.getRadius((self.maze.tile_size_x, self.maze.tile_size_y))
-
-        (x1, y1) = rect1.topleft
-        (x1b, y1b) = rect1.bottomright
-        (x2, y2) = rect2.topleft
-        (x2b, y2b) = rect2.bottomright
-
-        left = x2b < x1
-        right = x1b < x2
-        bottom = y2b < y1
-        top = y1b < y2
-        if top and left:
-            return dist((x1, y1b), (x2b, y2))
-        elif left and bottom:
-            return dist((x1, y1), (x2b, y2b))
-        elif bottom and right:
-            return dist((x1b, y1), (x2, y2b))
-        elif right and top:
-            return dist((x1b, y1b), (x2, y2))
-        elif left:
-            return x1 - x2b
-        elif right:
-            return x2 - x1b
-        elif bottom:
-            return y1 - y2b
-        elif top:
-            return y2 - y1b
-        else:  # rectangles intersect
-            return 0.
-
     def check_goal_reach(self):
         collide_index = self.player.get_rect().collidelist(self.maze.coinList)
         if not collide_index == -1:
@@ -238,26 +232,83 @@ class App_2(App):
         collide_index = self.player.get_rect().collidelist(self.maze.treasureList)
         if not collide_index == -1:
             return self.getCoordFromPix(self.maze.treasureList[collide_index].center)
-        return False;
+        return False
+    def doFuzzy(self,allObs):
+
+        gx, gy = self.current_goal
+        percept = self.maze.make_perception_list(self.player, self._display_surf)
+        # If we percept something we set it as the goal
+        if len(percept[2]) != 0:
+            gx, gy = percept[2][0].center
+
+        # IF WE FOUND A GOAL :
+        if self.current_goal:
+            self.vectors_to_show.append((gx, gy))
+            player_pos = self.player.get_rect().center
+            gx -= player_pos[0]
+            gy -= player_pos[1]
+
+            if not allObs:  # If there is no obstacles
+                allObs.append((-gx, -gy, None))
+
+            alldev = []
+            rG, thethaG = self.cart2Polar(gx, gy)
+            for (ox, oy, oObject) in allObs:
+                self.vectors_to_show.append((ox, oy))
+                # vecteur obstacle joueur
+                ox -= player_pos[0]
+                oy -= player_pos[1]
+                rO, thethaO = self.cart2Polar(ox, oy)
+
+                #Fix angle and distance
+                rO = self.getSmallest_distance_rects(oObject, self.player.get_rect())
+                theta = self.fix_angle(thethaO - thethaG)
+
+                theta_prime = self.fuzz_ctrl[(theta, rO)]
+                alldev.append(theta_prime)
+
+            # We use the absolute max
+            theta_prime = self.getAbsMax(alldev)
+            thethaG += theta_prime
+
+            R = 6
+            self.Fx, self.Fy = self.Polar2Cart(R, thethaG)
+            self.doForce_X(self.Fx)
+            self.doForce_Y(self.Fy)
+    def get_obstacles(self):
+        # Let's try to get the obstacles :
+        # the 4 lists are [wall_list, obstacle_list, item_list, monster_list]
+        percept = self.maze.make_perception_list(self.player, self._display_surf)
+        allObs = []
+        for walls in percept[0]:
+            allObs.append((walls.centerx, walls.centery, walls))
+        for obs in percept[1]:
+            allObs.append((obs.centerx, obs.centery, obs))
+        # Should avoid monster too
+        for mons in percept[3]:
+            allObs.append((mons.centerx, mons.centery, mons))
+
+        return allObs
+    def getGoalFromPath(self):
+        player_coord=self.current_player_case
+        if self.current_path  :
+            if player_coord in self.current_path:
+                current_goal_index = self.current_path.index(player_coord)
+                case_goal = self.current_path[
+                    current_goal_index + (1 if current_goal_index != len(self.current_path) - 1 else 0)]
+
+                gx = (case_goal[0] + 0.5) * self.maze.tile_size_x
+                gy = (case_goal[1] + 0.5) * self.maze.tile_size_y
+                return (gx,gy)
+            else :
+                self.current_path =self.plannificatorFun(player_coord, self.goalTypes)
+                return self.getGoalFromPath()
+
 
     def on_execute(self):
         if self.plannificatorFun:
             self.current_path = self.plannificatorFun(self.getPlayerCoord(), self.goalTypes)
-
-        def fix_angle(a):
-            if a >= np.pi:
-                a -= 2 * np.pi
-            elif a < -np.pi:
-                a += 2 * np.pi
-            return a
-
-        def getAbsMax(a):
-            abs_max = a[0]
-            for i in a:
-                if abs(abs_max) < abs(i):
-                    abs_max = i
-            return abs_max
-
+            self.current_goal = self.getGoalFromPath()
         while self._running:
             self._clock.tick(GAME_CLOCK)
             for event in pygame.event.get():
@@ -269,15 +320,6 @@ class App_2(App):
             keys = pygame.key.get_pressed()
             self.on_keyboard_input(keys)
 
-
-            # --- START IA INPUT ----
-            if self.NextCaseDetector():
-                print('oui')
-                self.current_player_case = self.getPlayerCoord()
-
-
-
-
             # if self.Tick_second():
             #     if self.current_player_quadrant == self.getPlayerQuadrant():
             #         self.change_goal = True
@@ -288,110 +330,33 @@ class App_2(App):
 
 
             if self.fuzz_ctrl is not None:
-                # Let's try to get the obstacles :
-                # the 4 lists are [wall_list, obstacle_list, item_list, monster_list]
-                percept = self.maze.make_perception_list(self.player, self._display_surf)
-
                 self.vectors_to_show.clear()
-                allObs = []
-                for walls in percept[0]:
-                    allObs.append((walls.centerx, walls.centery, walls))
-                for obs in percept[1]:
-                    allObs.append((obs.centerx, obs.centery, obs))
-                # Should avoid monster too
-                for mons in percept[3]:
-                    allObs.append((mons.centerx, mons.centery, mons))
+                allObs=self.get_obstacles()
 
-                # GOAL HANDLER :
-                gx, gy = None, None
-                player_coord = self.getPlayerCoord()
+                # --- START IA INPUT ----
+                if self.NextCaseDetector(): # IF we detect a change of case we change the recompute the goal
+                    self.current_player_case = self.getPlayerCoord()
+                    self.current_goal = self.getGoalFromPath()
 
-                # if we have a current path we set the goal as the next coordinate of the player
-                if self.current_path and player_coord in self.current_path:
-                    current_goal_index = self.current_path.index(player_coord)
-                    case_goal = self.current_path[current_goal_index + (1 if current_goal_index != len(self.current_path) - 1 else 0 )]
+                self.doFuzzy(allObs)
 
-                    if self.change_goal:
-                        gx,gy = self.getOpposingQuadrantCenterPixel()
-                        print('on change le goal a x = {}, y = {}'.format(gx,gy))
+            # --- END IA OUTPUT ----
 
-                    else:
-                        gx = (case_goal[0] + 0.5) * self.maze.tile_size_x
-                        gy = (case_goal[1] + 0.5) * self.maze.tile_size_y
-
-
-
-                if len(percept[2]) != 0:  # If we percept something we set it as the goal
-                    goal = percept[2][0]
-                    gy = goal.centery
-                    gx = goal.centerx
-
-                elif len(percept[2]) == 0 and gx is None and self.plannificator is None :
-                    # get goal from coin List or Treasure List or exit
-                    if len(self.maze.coinList) > 0:
-                        gx = self.maze.coinList[0].centerx
-                        gy = self.maze.coinList[0].centery
-
-                    elif len(self.maze.treasureList) > 0:
-                        gx = self.maze.treasureList[0].centerx
-                        gy = self.maze.treasureList[0].centery
-
-                    elif self.maze.exit:
-                        gx = self.maze.exit.centerx
-                        gy = self.maze.exit.centery
-
-                    if self.FOLLOW_MOUSE:
-                        gx, gy = pygame.mouse.get_pos()
-
-                # IF WE FOUND A GOAL :
-                if gx and gy:
-                    self.vectors_to_show.append((gx, gy))
-                    player_pos = self.player.get_rect().center
-                    gx -= player_pos[0]
-                    gy -= player_pos[1]
-
-                    rG, thethaG = self.cart2Polar(gx, gy)
-                    if not allObs:  # If there is no obstacles
-                        allObs.append((-gx, -gy, None))
-                    alldev = []
-                    for (ox, oy, oObject) in allObs:
-                        self.vectors_to_show.append((ox, oy))
-                        # vecteur obstacle joueur
-                        ox -= player_pos[0]
-                        oy -= player_pos[1]
-                        rO, thethaO = self.cart2Polar(ox, oy)
-
-                        rO = self.getSmallest_distance_rects(oObject, self.player.get_rect())
-                        theta = fix_angle(thethaO - thethaG)
-
-                        theta_prime = self.fuzz_ctrl[(theta, rO)]
-                        alldev.append(theta_prime)
-
-                    # We use the absolute max
-                    theta_prime = getAbsMax(alldev)
-                    thethaG += theta_prime
-
-                    R = 3
-                    self.Fx, self.Fy = self.Polar2Cart(R, thethaG)
-                    self.doForce_X(self.Fx)
-                    self.doForce_Y(self.Fy)
-
-            # --- END IA INPUT ----
-            # we compute a new current_path everytime we change case
-            # if self.plannificatorFun and self.ChangeCaseDetector():
-            #     self.current_path = self.plannificatorFun(self.getPlayerCoord(), self.goalTypes)
-
-            # check if we collide with target :
+            # ------ Collision check
+            # check if we collide with GOAL :
             goal_coord=self.check_goal_reach()
             if goal_coord:
                 self.plannificator.removedFromGoal.add(goal_coord)
-                self.current_path = self.plannificatorFun(self.getPlayerCoord(), self.goalTypes)
+                self.current_path = self.plannificatorFun(self.current_player_case, self.goalTypes)
+                self.current_goal = self.getGoalFromPath()
+
                 if len(self.current_path)==0 :
+                    # If we don,t find a path and some monsters aren't beatten retrain the genetic algo
                     if not self.GT.isAllMobsBeatten() :
                         self.reTrainGT()
-                        self.plannificator.updateBlockedList(self.GT.getBeattenMonsterCoord())
                         self.current_path = self.plannificatorFun(self.getPlayerCoord(), self.goalTypes)
                     else :
+                        # we try to compute a path as the exit !
                         self.current_path = self.plannificatorFun(self.getPlayerCoord(), ['exit'])
 
             # Check monster collision :
@@ -400,6 +365,7 @@ class App_2(App):
                 attr = self.GT.get_attributeFrom_Mons(monster)
                 if attr is not None:
                     self.player.set_attributes(attr)
+            # -------- END
 
             if self.on_coin_collision():
                 self.score += 1
@@ -431,3 +397,14 @@ class App_2(App):
             self.on_death_render()
 
         self.on_cleanup()
+
+
+    # For CUSTOM SETTING
+    def setPlannificator(self, plannificator):
+        self.plannificator = plannificator
+    def setPlanFun(self, planFun):
+        self.plannificatorFun = planFun
+    def setGoalTypes(self, goalTypes):
+        self.goalTypes = goalTypes
+    def setFuzzCtrl(self, fuzz_ctrl):
+        self.fuzz_ctrl = fuzz_ctrl
