@@ -212,7 +212,7 @@ class App_2(App):
         return x, y
 
     def getOpposingQuadrantCenterPixel(self):
-        nx, ny = self.getPlayerCoord()
+        nx, ny =self.current_player_case  #self.getPlayerCoord()
         qx, qy = self.getOpposingQuadrant()
         x = int((nx + 0.25) * self.maze.tile_size_x + qx * self.maze.tile_size_x / 2)
         y = int((ny + 0.25) * self.maze.tile_size_y + qy * self.maze.tile_size_y / 2)
@@ -221,10 +221,10 @@ class App_2(App):
     def Tick_second(self):
         # passe a True chaque seconde
         if self.timer > self.time_before_deblock:
+            self.time_before_deblock +=1
             return True
         else:
             return False
-
 
     def check_goal_reach(self):
         collide_index = self.player.get_rect().collidelist(self.maze.coinList)
@@ -234,6 +234,7 @@ class App_2(App):
         if not collide_index == -1:
             return self.getCoordFromPix(self.maze.treasureList[collide_index].center)
         return False
+
     def doFuzzy(self,allObs):
 
         gx, gy = self.current_goal
@@ -270,6 +271,7 @@ class App_2(App):
 
             # We use the absolute max
             theta_prime = self.getAbsMax(alldev)
+            #theta_prime = np.mean(alldev)
             thethaG += theta_prime
 
             R = 6
@@ -301,17 +303,43 @@ class App_2(App):
 
                 gx = (case_goal[0] + 0.5) * self.maze.tile_size_x
                 gy = (case_goal[1] + 0.5) * self.maze.tile_size_y
+                gx=int(gx)
+                gy=int(gy)
                 return (gx,gy)
             else :
-                self.current_path =self.plannificatorFun(player_coord, self.goalTypes)
+                self.current_path =self.plannificatorFun(self.getPlayerCoord(), self.goalTypes)
                 return self.getGoalFromPath()
 
     def update_player_case(self):
         self.previous_player_case=self.current_player_case
         self.current_player_case=self.getPlayerCoord()
 
-    def update_final_goals(self):
-        ...
+    blocked_index=0
+    def unblock_player(self):
+        if self.Tick_second():
+            # On est bloquée si au bout de 2 secondes on est toujours sur la même case !!
+            if self.current_player_case == self.previous_player_case and self.blocked_index ==0:
+                self.current_goal = self.getOpposingQuadrantCenterPixel()
+                self.blocked_index=1
+
+            elif self.current_player_case == self.previous_player_case and self.blocked_index ==1 :
+                self.current_goal=self.getGoalFromPath()
+                self.blocked_index = 2
+
+            elif self.current_player_case == self.previous_player_case and self.blocked_index ==2 : # case bloquante !!
+                current_goal_index = self.current_path.index(self.current_player_case)
+                next_case_goal = self.current_path[current_goal_index + (1 if current_goal_index != len(self.current_path)-1 else 0)]
+                self.plannificator.blocked_node.add(next_case_goal)
+                self.current_path = self.plannificatorFun(self.current_player_case, self.goalTypes)
+                self.current_goal = self.getGoalFromPath()
+                self.blocked_index = 0
+            else:
+                self.blocked_index = 0
+
+            self.previous_player_case = self.current_player_case
+
+
+
     def on_execute(self):
         if self.plannificatorFun:
             self.current_path = self.plannificatorFun(self.getPlayerCoord(), self.goalTypes)
@@ -327,12 +355,7 @@ class App_2(App):
             keys = pygame.key.get_pressed()
             self.on_keyboard_input(keys)
 
-            if self.Tick_second():
-                if self.current_player_case == self.previous_player_case and ...:
-                    ...
-                else:
-                    ...
-                self.time_before_deblock = self.timer + 2
+            self.unblock_player()
 
 
             if self.fuzz_ctrl is not None:
@@ -360,10 +383,11 @@ class App_2(App):
                     # If we don,t find a path and some monsters aren't beatten retrain the genetic algo
                     if not self.GT.isAllMobsBeatten() :
                         self.reTrainGT()
-                        self.current_path = self.plannificatorFun(self.getPlayerCoord(), self.goalTypes)
+                        self.current_path = self.plannificatorFun(self.current_player_case, self.goalTypes)
                     else :
                         # we try to compute a path as the exit !
                         self.current_path = self.plannificatorFun(self.getPlayerCoord(), ['exit'])
+                        self.current_goal = self.getGoalFromPath()
 
             # Check monster collision :
             monster = self.on_monster_collision()

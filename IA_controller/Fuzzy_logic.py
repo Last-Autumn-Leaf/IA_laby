@@ -66,7 +66,7 @@ if __name__ == '__main__':
 
     tile_size = (theAPP.maze.tile_size_x, theAPP.maze.tile_size_y)
     fuzz_ctrl = FuzzPlayer(tile_size)
-    theAPP.setFuzzCtrl(fuzz_ctrl)
+    #theAPP.setFuzzCtrl(fuzz_ctrl)
 
     SHOW_VARIABLE=False
     if SHOW_VARIABLE :
@@ -74,4 +74,4 @@ if __name__ == '__main__':
              var.view()
         plt.show()
 
-    theAPP.on_execute()
+    #theAPP.on_execute()
