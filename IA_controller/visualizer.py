@@ -331,13 +331,10 @@ class App_2(App):
             elif self.current_player_case == self.previous_player_case and self.blocked_index ==1 :
                 self.current_goal=self.getGoalFromPath()
                 self.blocked_index = 2
-            elif self.current_player_case == self.previous_player_case and self.blocked_index ==2 :
-                if self.current_player_case in self.current_path and self.current_path.index(self.current_player_case) !=0:
-                    previous_case =self.current_path[self.current_path.index(self.current_player_case)-1]
-                    self.current_goal=self.getOpposingQuadrantCenterPixel(previous_case)
-                self.blocked_index = 3
 
-            elif self.current_player_case == self.previous_player_case and self.blocked_index ==4: # case bloquante !!
+
+
+            elif self.current_player_case == self.previous_player_case and self.blocked_index ==3: # case bloquante !!
                 if self.current_player_case in self.current_path :
                     current_goal_index = self.current_path.index(self.current_player_case)
                     next_case_goal = self.current_path[current_goal_index + (1 if current_goal_index != len(self.current_path)-1 else 0)]
