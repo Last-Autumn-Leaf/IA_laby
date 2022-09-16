@@ -19,16 +19,17 @@ class App_2(App):
         self.plannificatorFun = plannificator.default_plan_fun if plannificator is not None else None
         self.current_path = None
 
+
         self.Fx = 0
         self.Fy = 0
 
         self.time_before_deblock = self.timer + 2
-        self.change_goal = False
 
         self.vectors_to_show = []
         self.goalTypes =goalTypes
         self.on_init()
         self.current_player_case = self.getPlayerCoord()
+        self.previous_player_case = self.current_player_case
         self.current_player_quadrant = self.getPlayerQuadrant()
         self.treasure_coin_list_size= len(self.maze.treasureList + self.maze.coinList)
 
@@ -290,6 +291,7 @@ class App_2(App):
 
         return allObs
     def getGoalFromPath(self):
+        #TODO
         player_coord=self.current_player_case
         if self.current_path  :
             if player_coord in self.current_path:
@@ -304,11 +306,16 @@ class App_2(App):
                 self.current_path =self.plannificatorFun(player_coord, self.goalTypes)
                 return self.getGoalFromPath()
 
+    def update_player_case(self):
+        self.previous_player_case=self.current_player_case
+        self.current_player_case=self.getPlayerCoord()
 
+    def update_final_goals(self):
+        ...
     def on_execute(self):
         if self.plannificatorFun:
             self.current_path = self.plannificatorFun(self.getPlayerCoord(), self.goalTypes)
-            self.current_goal = self.getGoalFromPath()
+            self.current_goal=self.getGoalFromPath()
         while self._running:
             self._clock.tick(GAME_CLOCK)
             for event in pygame.event.get():
@@ -320,13 +327,12 @@ class App_2(App):
             keys = pygame.key.get_pressed()
             self.on_keyboard_input(keys)
 
-            # if self.Tick_second():
-            #     if self.current_player_quadrant == self.getPlayerQuadrant():
-            #         self.change_goal = True
-            #     else:
-            #         self.change_goal = False
-            #     self.current_player_case = self.getPlayerQuadrant()
-            #     self.time_before_deblock = self.timer + 2
+            if self.Tick_second():
+                if self.current_player_case == self.previous_player_case and ...:
+                    ...
+                else:
+                    ...
+                self.time_before_deblock = self.timer + 2
 
 
             if self.fuzz_ctrl is not None:
@@ -335,7 +341,7 @@ class App_2(App):
 
                 # --- START IA INPUT ----
                 if self.NextCaseDetector(): # IF we detect a change of case we change the recompute the goal
-                    self.current_player_case = self.getPlayerCoord()
+                    self.update_player_case()
                     self.current_goal = self.getGoalFromPath()
 
                 self.doFuzzy(allObs)
