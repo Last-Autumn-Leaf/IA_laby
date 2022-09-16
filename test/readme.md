@@ -6,7 +6,6 @@ Dans le répertoire IA_controller
 ## Test Fuzzy
 
 Pour tester la Logique Floue seule, lancer Fuzzy_logic.py . Le programme affiche uniquement les fonctions d'appartenances du controlleur flou.
-
 <img src="fig1.png" alt="drawing" width="500"/>
 
 Fonction d'appartenance de l'input : angle_goal-obstacle
@@ -67,13 +66,22 @@ Type de la case de coordonnees (1,0) : start
 
 ## Test Planification
 
+Pour tester la planification, lancer Planification_search.py
+L'algorithme effectue un BFS pour trouver les artéfacts puis la sortie.
+Elle affiche aussi le chemin en vert afin de valider visuellement le chemin.
 Pour tester la planification, lancez Planification_search.py
+
 <img src="fig4.png" alt="drawing" width="500"/>
 
 ## Test Genetic Algorithms
 
 Pour tester l'algorithme génétique, lancez Train_genetic.py
+<img src="GT2.png" alt="drawing" width="500"/>
 
-Dans le repertoire géneral
+Exemple d'évolution de fitness score au cours des générations
+
 ## Test de l'IA global sur les vrais labyrinthes
-Pour tester l'IA dans son ensemble, lancez main.py
+
+Dans le repertoire géneral.
+
+Pour tester l'IA dans son ensemble, lancez main.py en précisant la map voulue dans la variable (map_file_name)
