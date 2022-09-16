@@ -74,7 +74,8 @@ if __name__ == '__main__':
 
     SHOW_VARIABLE=True
     if SHOW_VARIABLE :
-        for var in fuzz_ctrl.sim.ctrl.fuzzy_variables:
-             var.view()
-        plt.show()
+        for i,var in enumerate(fuzz_ctrl.sim.ctrl.fuzzy_variables):
+            var.view()
+            #plt.savefig(f'test/fig{i}.png')
+        #plt.show()
 

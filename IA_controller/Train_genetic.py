@@ -202,6 +202,7 @@ class GeneticTrainer:
             plt.plot(mob.mean_evolution,label='mean F')
             plt.legend()
             print(mob)
+            plt.savefig("test/GTi.png")
             plt.show()
 
     def getBeattenMonsterCoord(self):
