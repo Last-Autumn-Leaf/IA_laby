@@ -1,7 +1,7 @@
 import numpy as np
 import pygame
 
-from Constants import GAME_CLOCK, WHITE, GREEN, PERCEPTION_RADIUS
+from Constants import GAME_CLOCK, WHITE, GREEN, PERCEPTION_RADIUS, RED
 from Games2D import App
 from IA_controller.Helper_fun import draw_rect_alpha, getMonsterCoord, setCorrectCHWD
 from IA_controller.Train_genetic import GeneticTrainer
@@ -142,6 +142,9 @@ class App_2(App):
                 if (x, y) == player_coord: start_lever = True;
                 if start_lever:
                     draw_rect_alpha(display_surf, color, (x * tile_size_x, y * tile_size_y, tile_size_x, tile_size_y))
+                if (x,y) in self.plannificator.blocked_node :
+                    pygame.draw.rect(display_surf, RED,(x * tile_size_x, y * tile_size_y, tile_size_x, tile_size_y),width=1)
+
 
     # ----------- FUZZY PART ----------
     def doForce_Y(self, force):
