@@ -53,9 +53,9 @@ class App_2(App):
             if self.plannificator is not None :
                 self.plannificator.blocked_node.clear()
                 print("All monster Beatten !")
-            else :
-                self.plannificator.updateBlockedList(self.GT.getBeattenMonsterCoord())
-                print("num list =",self.GT.get_gen())
+        elif  self.plannificator is not None :
+            self.plannificator.updateBlockedList(self.GT.getBeattenMonsterCoord())
+            print("num list =",self.GT.get_gen())
 
     #  ---------- Math FUNCTIONS ------------- :
     def fix_angle(self, a):
@@ -227,7 +227,7 @@ class App_2(App):
     def Tick_second(self):
         # passe a True chaque seconde
         if self.timer > self.time_before_deblock:
-            self.time_before_deblock +=2
+            self.time_before_deblock +=5
             return True
         else:
             return False

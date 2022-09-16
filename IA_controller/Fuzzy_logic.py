@@ -59,19 +59,22 @@ class FuzzPlayer:
         self.sim = ctrl.ControlSystemSimulation(system)
         return self.sim
 
+
+
+
 if __name__ == '__main__':
     setCorrectCHWD()
     map_file_name = 'assets/test_Map'
     theAPP = App_2(map_file_name)
 
+
     tile_size = (theAPP.maze.tile_size_x, theAPP.maze.tile_size_y)
     fuzz_ctrl = FuzzPlayer(tile_size)
     #theAPP.setFuzzCtrl(fuzz_ctrl)
 
-    SHOW_VARIABLE=False
+    SHOW_VARIABLE=True
     if SHOW_VARIABLE :
         for var in fuzz_ctrl.sim.ctrl.fuzzy_variables:
              var.view()
         plt.show()
 
-    #theAPP.on_execute()

@@ -66,5 +66,11 @@ if __name__ == '__main__':
     theAPP.setFuzzCtrl(fuzz_ctrl)
     ### --- ###
 
+    # SHOW_VARIABLE = True
+    # if SHOW_VARIABLE:
+    #     for var in fuzz_ctrl.sim.ctrl.fuzzy_variables:
+    #         var.view()
+    #     plt.show()
+
     theAPP.on_execute()
 
