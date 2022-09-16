@@ -5,7 +5,7 @@ from Constants import *
 from IA_controller.Helper_fun import setCorrectCHWD, getMonsterCoord
 from Player import Player
 import random
-POP_SIZE = 10
+POP_SIZE = 100
 
 create_random_attribute = lambda: [random.randrange(-MAX_ATTRIBUTE, MAX_ATTRIBUTE) for i in range(NUM_ATTRIBUTES)]
 
@@ -181,6 +181,7 @@ class GeneticTrainer:
                 for j in range(gen) :
                     mob.do_step()
                     mob.new_gen()
+
         return self.isAllMobsBeatten()
 
     def isAllMobsBeatten (self) :
@@ -207,16 +208,6 @@ class GeneticTrainer:
                 monster_set.add(mob.pos)
         return monster_set
 
-    def get_attributeFrom_coord(self,coord):
-        # check if monster is beatten
-        for i, mob in enumerate(self.monster_list):
-            if mob.pos ==coord :
-                if mob :
-                    return mob[0]
-                else :
-                    return None
-        return None
-
     def get_attributeFrom_Mons(self,mons):
         # check if monster is beatten
         for i, mob in enumerate(self.monster_list):
@@ -227,7 +218,11 @@ class GeneticTrainer:
                     return None # Not beatten
         return None # Not in the list ??
 
-
+    def get_gen(self):
+        gen_list=[]
+        for i,mob in enumerate(self.monster_list ):
+            gen_list.append(mob.currentGen)
+        return gen_list
 
 if __name__ == '__main__':
 

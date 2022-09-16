@@ -55,6 +55,7 @@ class App_2(App):
                 print("All monster Beatten !")
             else :
                 self.plannificator.updateBlockedList(self.GT.getBeattenMonsterCoord())
+                print("num list =",self.GT.get_gen())
 
     #  ---------- Math FUNCTIONS ------------- :
     def fix_angle(self, a):
@@ -236,7 +237,7 @@ class App_2(App):
         return False
 
     def doFuzzy(self,allObs):
-
+        if self.current_goal is None : return None
         gx, gy = self.current_goal
         percept = self.maze.make_perception_list(self.player, self._display_surf)
         # If we percept something we set it as the goal
@@ -327,12 +328,13 @@ class App_2(App):
                 self.blocked_index = 2
 
             elif self.current_player_case == self.previous_player_case and self.blocked_index ==2 : # case bloquante !!
-                current_goal_index = self.current_path.index(self.current_player_case)
-                next_case_goal = self.current_path[current_goal_index + (1 if current_goal_index != len(self.current_path)-1 else 0)]
-                self.plannificator.blocked_node.add(next_case_goal)
-                self.current_path = self.plannificatorFun(self.current_player_case, self.goalTypes)
-                self.current_goal = self.getGoalFromPath()
-                self.blocked_index = 0
+                if self.current_player_case in self.current_path :
+                    current_goal_index = self.current_path.index(self.current_player_case)
+                    next_case_goal = self.current_path[current_goal_index + (1 if current_goal_index != len(self.current_path)-1 else 0)]
+                    self.plannificator.blocked_node.add(next_case_goal)
+                    self.current_path = self.plannificatorFun(self.current_player_case, self.goalTypes)
+                    self.current_goal = self.getGoalFromPath()
+                    self.blocked_index = 0
             else:
                 self.blocked_index = 0
 
@@ -355,7 +357,13 @@ class App_2(App):
             keys = pygame.key.get_pressed()
             self.on_keyboard_input(keys)
 
-            self.unblock_player()
+
+            if len(self.current_path)==0 and not self.GT.isAllMobsBeatten():
+                    print("retraining Player")
+                    self.reTrainGT()
+                    self.current_path = self.plannificatorFun(self.current_player_case, self.goalTypes)
+            else :
+                self.unblock_player()
 
 
             if self.fuzz_ctrl is not None:
@@ -382,6 +390,7 @@ class App_2(App):
                 if len(self.current_path)==0 :
                     # If we don,t find a path and some monsters aren't beatten retrain the genetic algo
                     if not self.GT.isAllMobsBeatten() :
+                        print("retraining Player")
                         self.reTrainGT()
                         self.current_path = self.plannificatorFun(self.current_player_case, self.goalTypes)
                     else :
