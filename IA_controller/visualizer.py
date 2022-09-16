@@ -137,10 +137,31 @@ class App_2(App):
             else:
                 self.on_AI_input('LEFT')
 
-    def ChangeCaseDetector(self):
-        true_case = self.getPlayerCoord()
-        if self.current_player_case != true_case:
-            self.current_player_case = true_case
+    def NextCaseDetector(self):
+        # renvoie false si joueur a pas change
+        # renvoie true si joueur a change
+
+        player_rect = self.player.get_rect()
+        topleft_corner_player = player_rect.topleft
+        bottomright_corner_player = player_rect.bottomright
+
+        case_coord = self.current_player_case
+        topleft_corner_case = (case_coord[0] * self.maze.tile_size_x, case_coord[1] * self.maze.tile_size_y)
+        bottomright_corner_case = ((case_coord[0] + 1) * self.maze.tile_size_x - 1, (case_coord[1] + 1) * self.maze.tile_size_y - 1)
+
+        x1 = topleft_corner_player[0]
+        y1 = topleft_corner_player[1]
+
+        x2 = bottomright_corner_player[0]
+        y2 = bottomright_corner_player[1]
+
+        xmin = topleft_corner_case[0]
+        ymin = topleft_corner_case[1]
+
+        xmax = bottomright_corner_case[0]
+        ymax = bottomright_corner_case[1]
+
+        if x2 < xmin or x1 > xmax or y2 < ymin or y1 > ymax:
             return True
         else:
             return False
@@ -250,14 +271,20 @@ class App_2(App):
 
 
             # --- START IA INPUT ----
+            if self.NextCaseDetector():
+                print('oui')
+                self.current_player_case = self.getPlayerCoord()
 
-            if self.Tick_second():
-                if self.current_player_quadrant == self.getPlayerQuadrant():
-                    self.change_goal = True
-                else:
-                    self.change_goal = False
-                self.current_player_case = self.getPlayerQuadrant()
-                self.time_before_deblock = self.timer + 2
+
+
+
+            # if self.Tick_second():
+            #     if self.current_player_quadrant == self.getPlayerQuadrant():
+            #         self.change_goal = True
+            #     else:
+            #         self.change_goal = False
+            #     self.current_player_case = self.getPlayerQuadrant()
+            #     self.time_before_deblock = self.timer + 2
 
 
             if self.fuzz_ctrl is not None:

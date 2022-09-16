@@ -61,9 +61,9 @@ if __name__ == '__main__':
 
 
     ### Integration de fuzzy ###
-    tile_size = (theAPP.maze.tile_size_x, theAPP.maze.tile_size_y)
-    fuzz_ctrl = FuzzPlayer(tile_size)
-    theAPP.setFuzzCtrl(fuzz_ctrl)
+    # tile_size = (theAPP.maze.tile_size_x, theAPP.maze.tile_size_y)
+    # fuzz_ctrl = FuzzPlayer(tile_size)
+    # theAPP.setFuzzCtrl(fuzz_ctrl)
     ### --- ###
 
     theAPP.on_execute()
