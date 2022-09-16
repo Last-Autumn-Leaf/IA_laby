@@ -124,6 +124,3 @@ if __name__ == '__main__':
     type_case = prolog_com.GetType(coord_case = case_to_test)
     print('type de la case de coordonnees ({},{}) : {}'.format(case_to_test[0], case_to_test[1], type_case))
     ### --- ###
-
-
-    exit()
