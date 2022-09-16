@@ -201,8 +201,9 @@ class GeneticTrainer:
             plt.plot(mob.evolution,label='max F')
             plt.plot(mob.mean_evolution,label='mean F')
             plt.legend()
+            plt.title("Évolution du fitness score")
             print(mob)
-            plt.savefig("test/GTi.png")
+            plt.savefig(f"test/GT{i}.png")
             plt.show()
 
     def getBeattenMonsterCoord(self):
