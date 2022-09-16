@@ -93,13 +93,37 @@ class PrologCom:
 if __name__ == '__main__':
     setCorrectCHWD()
 
-    map_file_name='assets/mazeMedium_3'
+    map_file_name='assets/test_Map'
     maze=getMazeFromFile(map_file_name)
     prolog_com=PrologCom(maze)
-    lol = prolog_com.getCoordFromType(COIN)
+    Position_coin = prolog_com.getCoordFromType(COIN)
+    Position_treasure = prolog_com.getCoordFromType(TREASURE)
+    Position_exit = prolog_com.getCoordFromType(EXIT)
+    Position_start = prolog_com.getCoordFromType(START_CASE)
+    Position_free_case = prolog_com.getCoordFromType(EMPTY_CASE)
+    Position_wall = prolog_com.getCoordFromType(WALL)
+    Position_obstacle = prolog_com.getCoordFromType(OBSTACLE)
 
-    print(lol)
-    type_case = prolog_com.GetType(coord_case=(1,13))
-    print(type_case)
+    ### affichage de la map ###
+    print('carte du labyrinthe :')
+    print(*maze,sep = "\n")
+    ### --- ###
+
+    ### liste par type des cases de la carte ###
+    print('Liste des coordonees (en case) des coins = {}'.format(Position_coin))
+    print('Liste des coordonees (en case) des treasures = {}'.format(Position_treasure))
+    print('Coordonees (en case) de l\'exit = {}'.format(Position_exit[0]))
+    print('Coordonees (en case) du start = {}'.format(Position_start[0]))
+    print('Liste des coordonees (en case) des cases libres = {}'.format(Position_free_case))
+    print('Liste des coordonees (en case) des cases murs = {}'.format(Position_wall))
+    print('Liste des coordonees (en case) des cases avec un obstacle = {}'.format(Position_obstacle))
+    ### --- ###
+
+    ### Exemple de l'appropriation du type en rentrant les coordonnees d'une case ###
+    case_to_test = (1,13)
+    type_case = prolog_com.GetType(coord_case = case_to_test)
+    print('type de la case de coordonnees ({},{}) : {}'.format(case_to_test[0], case_to_test[1], type_case))
+    ### --- ###
+
 
     exit()
