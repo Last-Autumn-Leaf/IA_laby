@@ -5,7 +5,7 @@ from Constants import *
 from IA_controller.Helper_fun import setCorrectCHWD, getMonsterCoord
 from Player import Player
 import random
-POP_SIZE = 100
+POP_SIZE = 10
 
 create_random_attribute = lambda: [random.randrange(-MAX_ATTRIBUTE, MAX_ATTRIBUTE) for i in range(NUM_ATTRIBUTES)]
 
@@ -224,10 +224,5 @@ class GeneticTrainer:
             gen_list.append(mob.currentGen)
         return gen_list
 
-if __name__ == '__main__':
 
-    setCorrectCHWD()
-
-
-    #theAPP.on_execute()
 

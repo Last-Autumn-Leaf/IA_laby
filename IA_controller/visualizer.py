@@ -3,7 +3,7 @@ import pygame
 
 from Constants import GAME_CLOCK, WHITE, GREEN, PERCEPTION_RADIUS
 from Games2D import App
-from IA_controller.Helper_fun import draw_rect_alpha, getMonsterCoord
+from IA_controller.Helper_fun import draw_rect_alpha, getMonsterCoord, setCorrectCHWD
 from IA_controller.Train_genetic import GeneticTrainer
 
 
@@ -447,3 +447,15 @@ class App_2(App):
         self.goalTypes = goalTypes
     def setFuzzCtrl(self, fuzz_ctrl):
         self.fuzz_ctrl = fuzz_ctrl
+
+if __name__ == '__main__':
+
+    setCorrectCHWD()
+    map_file_name='assets/MazeLarge_3'
+    theAPP = App_2(map_file_name)
+    theAPP.on_init()
+    GT = GeneticTrainer(theAPP.maze.monsterList, getMonsterCoord(theAPP.maze.maze))
+    GT.test()
+
+    #theAPP.on_execute()
+
