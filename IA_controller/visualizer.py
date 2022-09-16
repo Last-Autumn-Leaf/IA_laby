@@ -387,7 +387,7 @@ class App_2(App):
                     else :
                         # we try to compute a path as the exit !
                         self.current_path = self.plannificatorFun(self.getPlayerCoord(), ['exit'])
-                        self.current_goal = self.getGoalFromPath()
+                    self.current_goal = self.getGoalFromPath()
 
             # Check monster collision :
             monster = self.on_monster_collision()
