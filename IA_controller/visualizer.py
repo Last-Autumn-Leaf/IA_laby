@@ -215,8 +215,10 @@ class App_2(App):
             y = 0
         return x, y
 
-    def getOpposingQuadrantCenterPixel(self):
-        nx, ny =self.current_player_case  #self.getPlayerCoord()
+    def getOpposingQuadrantCenterPixel(self,case=None):
+        if case is None :
+            case =self.current_player_case
+        nx, ny =case #self.getPlayerCoord()
         qx, qy = self.getOpposingQuadrant()
         x = int((nx + 0.25) * self.maze.tile_size_x + qx * self.maze.tile_size_x / 2)
         y = int((ny + 0.25) * self.maze.tile_size_y + qy * self.maze.tile_size_y / 2)
@@ -225,7 +227,7 @@ class App_2(App):
     def Tick_second(self):
         # passe a True chaque seconde
         if self.timer > self.time_before_deblock:
-            self.time_before_deblock +=1
+            self.time_before_deblock +=2
             return True
         else:
             return False
@@ -329,8 +331,13 @@ class App_2(App):
             elif self.current_player_case == self.previous_player_case and self.blocked_index ==1 :
                 self.current_goal=self.getGoalFromPath()
                 self.blocked_index = 2
+            elif self.current_player_case == self.previous_player_case and self.blocked_index ==2 :
+                if self.current_player_case in self.current_path and self.current_path.index(self.current_player_case) !=0:
+                    previous_case =self.current_path[self.current_path.index(self.current_player_case)-1]
+                    self.current_goal=self.getOpposingQuadrantCenterPixel(previous_case)
+                self.blocked_index = 3
 
-            elif self.current_player_case == self.previous_player_case and self.blocked_index ==2 : # case bloquante !!
+            elif self.current_player_case == self.previous_player_case and self.blocked_index ==4: # case bloquante !!
                 if self.current_player_case in self.current_path :
                     current_goal_index = self.current_path.index(self.current_player_case)
                     next_case_goal = self.current_path[current_goal_index + (1 if current_goal_index != len(self.current_path)-1 else 0)]
@@ -343,8 +350,6 @@ class App_2(App):
                 self.blocked_index = 0
 
             self.previous_player_case = self.current_player_case
-
-
 
     def on_execute(self):
         if self.plannificatorFun:
