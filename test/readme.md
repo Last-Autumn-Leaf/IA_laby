@@ -2,7 +2,7 @@
 
 
 
-
+Dans le répertoire IA_controller
 ## Test Fuzzy
 
 Pour tester la Logique Floue seule, lancer Fuzzy_logic.py . Le programme affiche uniquement les fonctions d'appartenances du controlleur flou.
@@ -21,7 +21,7 @@ Fonction d'appartenance de l'output : angle_commande
 
 ## Test Prolog
 
-Pour tester la base de données Prolog, lancer PrologCom.py . 
+Pour tester la base de données Prolog, lancez PrologCom.py . 
 
 carte du labyrinthe :
 
@@ -67,11 +67,13 @@ Type de la case de coordonnees (1,0) : start
 
 ## Test Planification
 
-Pour tester la planification, lancer Planification_search.py
+Pour tester la planification, lancez Planification_search.py
 <img src="fig4.png" alt="drawing" width="500"/>
 
 ## Test Genetic Algorithms
 
-Pour tester l'algorithme génétique, lancer Train_genetic.py
+Pour tester l'algorithme génétique, lancez Train_genetic.py
 
-
+Dans le repertoire géneral
+## Test de l'IA global sur les vrais labyrinthes
+Pour tester l'IA dans son ensemble, lancez main.py
