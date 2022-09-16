@@ -333,8 +333,7 @@ class App_2(App):
                 self.blocked_index = 2
 
 
-
-            elif self.current_player_case == self.previous_player_case and self.blocked_index ==3: # case bloquante !!
+            elif self.current_player_case == self.previous_player_case and self.blocked_index ==2: # case bloquante !!
                 if self.current_player_case in self.current_path :
                     current_goal_index = self.current_path.index(self.current_player_case)
                     next_case_goal = self.current_path[current_goal_index + (1 if current_goal_index != len(self.current_path)-1 else 0)]
